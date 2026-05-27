@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+dist
+.git
+.github
+Dockerfile
+docker-compose.yml
+setup-db.sh
+.env
+.env.example
+*.md
