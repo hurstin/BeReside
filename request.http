@@ -1,0 +1,4 @@
+### GET Health Check
+# Query the Terminus health monitoring endpoint to check service and database status
+GET http://localhost:3000/health
+Accept: application/json
