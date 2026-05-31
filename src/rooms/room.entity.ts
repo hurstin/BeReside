@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
 import { Booking } from '../bookings/booking.entity';
@@ -35,6 +36,9 @@ export class Room {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp with time zone', nullable: true })
+  deletedAt?: Date;
 
   @OneToMany(() => Booking, (booking) => booking.room)
   bookings: Booking[];
