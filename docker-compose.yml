@@ -26,6 +26,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: builder
+    command: npm run start:dev
     container_name: bereside-api
     restart: always
     ports:
@@ -43,6 +45,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /usr/src/app/src
+        - action: rebuild
+          path: package.json
 
 volumes:
   postgres_data:

@@ -26,7 +26,7 @@ Content-Type: application/json
 
 ### Get Current User Profile (Requires JWT token from Login)
 GET http://localhost:3000/users/me
-Authorization: Bearer <replace-with-access-token>
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI0YTFhNWY4Zi05YmE3LTRlOTQtOGQ3Yy1iZmNhMjNkN2NlYjgiLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3ODAyMjUzNzEsImV4cCI6MTc4MDIyODk3MX0.birye81M02Sg8jyKkcKEYyU6NhciPGDcglKDVmTEhLs
 
 ### Update Current User Profile
 PATCH http://localhost:3000/users/me
@@ -64,3 +64,36 @@ Content-Type: application/json
   "token": "<replace-with-development-token>",
   "newPassword": "password123"
 }
+
+### Get All Rooms
+# Retrieves all available rooms sorted by room number
+# Optional query parameters: checkIn, checkOut (YYYY-MM-DD)
+GET http://localhost:3000/rooms?checkIn=2026-06-01&checkOut=2026-06-05&status=maintenance
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI0YTFhNWY4Zi05YmE3LTRlOTQtOGQ3Yy1iZmNhMjNkN2NlYjgiLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3ODAyMjUzNzEsImV4cCI6MTc4MDIyODk3MX0.birye81M02Sg8jyKkcKEYyU6NhciPGDcglKDVmTEhLs
+Accept: application/json
+
+### Create a New Room (Admin only)
+POST http://localhost:3000/rooms
+Authorization: Bearer <replace-with-admin-access-token>
+Content-Type: application/json
+
+{
+  "roomNumber": "501",
+  "type": "apartment",
+  "basePricePerNight": 600.00,
+  "status": "available"
+}
+
+### Update a Room (Admin/Staff only)
+PATCH http://localhost:3000/rooms/<replace-with-room-uuid>
+Authorization: Bearer <replace-with-staff-access-token>
+Content-Type: application/json
+
+{
+  "basePricePerNight": 650.00,
+  "status": "maintenance"
+}
+
+### Delete a Room (Admin only, safe soft-delete)
+DELETE http://localhost:3000/rooms/<replace-with-room-uuid>
+Authorization: Bearer <replace-with-admin-access-token>

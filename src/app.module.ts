@@ -20,7 +20,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
       password: process.env.DB_PASSWORD ?? 'password',
       database: process.env.DB_NAME ?? 'bereside_booking_db',
       autoLoadEntities: true,
-      synchronize: false, // safer for production environments
+      synchronize: true, // auto-sync DB schema (safe for development)
     }),
     HealthModule,
     UsersModule,
