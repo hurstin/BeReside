@@ -16,6 +16,12 @@ export class CreateUserDto {
   password: string;
 
   @IsString()
+  @MinLength(6, {
+    message: 'Password confirmation must be at least 6 characters long',
+  })
+  passwordConfirm: string;
+
+  @IsString()
   @IsNotEmpty({ message: 'First name is required' })
   firstName: string;
 

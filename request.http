@@ -2,3 +2,65 @@
 # Query the Terminus health monitoring endpoint to check service and database status
 GET http://localhost:3000/health
 Accept: application/json
+
+### Register a New User
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123",
+  "passwordConfirm": "password123",
+  "firstName": "John",
+  "lastName": "Doe"
+}
+
+### Login with the New User
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+### Get Current User Profile (Requires JWT token from Login)
+GET http://localhost:3000/users/me
+Authorization: Bearer <replace-with-access-token>
+
+### Update Current User Profile
+PATCH http://localhost:3000/users/me
+Authorization: Bearer <replace-with-access-token>
+Content-Type: application/json
+
+{
+  "firstName": "Jonathan",
+  "phoneNumber": "123-456-7890"
+}
+
+### Update Password
+PATCH http://localhost:3000/users/me/password
+Authorization: Bearer <replace-with-access-token>
+Content-Type: application/json
+
+{
+  "oldPassword": "password123",
+  "newPassword": "newpassword123"
+}
+
+### Forgot Password (request reset token)
+POST http://localhost:3000/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+### Reset Password (using token from forgot password response)
+POST http://localhost:3000/auth/reset-password
+Content-Type: application/json
+
+{
+  "token": "<replace-with-development-token>",
+  "newPassword": "password123"
+}
