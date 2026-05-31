@@ -1,4 +1,8 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Room } from './room.entity';
@@ -15,7 +19,11 @@ export class RoomsService {
     private readonly bookingRepository: Repository<Booking>,
   ) {}
 
-  async findAll(checkIn?: string, checkOut?: string, status?: string): Promise<Room[]> {
+  async findAll(
+    checkIn?: string,
+    checkOut?: string,
+    status?: string,
+  ): Promise<Room[]> {
     const query = this.roomRepository.createQueryBuilder('room');
 
     if (status) {
@@ -24,7 +32,9 @@ export class RoomsService {
 
     if (checkIn && checkOut) {
       if (!status) {
-        query.andWhere('room.status = :defaultStatus', { defaultStatus: 'available' });
+        query.andWhere('room.status = :defaultStatus', {
+          defaultStatus: 'available',
+        });
       }
       query.andWhere(
         `NOT EXISTS (
@@ -34,7 +44,7 @@ export class RoomsService {
           AND b.check_in_date < :checkOut 
           AND b.check_out_date > :checkIn
         )`,
-        { checkIn, checkOut }
+        { checkIn, checkOut },
       );
     }
 
@@ -44,9 +54,13 @@ export class RoomsService {
   }
 
   async create(createRoomDto: CreateRoomDto): Promise<Room> {
-    const existing = await this.roomRepository.findOne({ where: { roomNumber: createRoomDto.roomNumber } });
+    const existing = await this.roomRepository.findOne({
+      where: { roomNumber: createRoomDto.roomNumber },
+    });
     if (existing) {
-      throw new ConflictException(`Room number ${createRoomDto.roomNumber} already exists`);
+      throw new ConflictException(
+        `Room number ${createRoomDto.roomNumber} already exists`,
+      );
     }
     const room = this.roomRepository.create(createRoomDto);
     return this.roomRepository.save(room);
@@ -58,23 +72,33 @@ export class RoomsService {
       throw new BadRequestException('Room not found');
     }
 
-    if (updateRoomDto.roomNumber && updateRoomDto.roomNumber !== room.roomNumber) {
-      const existing = await this.roomRepository.findOne({ where: { roomNumber: updateRoomDto.roomNumber } });
+    if (
+      updateRoomDto.roomNumber &&
+      updateRoomDto.roomNumber !== room.roomNumber
+    ) {
+      const existing = await this.roomRepository.findOne({
+        where: { roomNumber: updateRoomDto.roomNumber },
+      });
       if (existing) {
-        throw new ConflictException(`Room number ${updateRoomDto.roomNumber} already exists`);
+        throw new ConflictException(
+          `Room number ${updateRoomDto.roomNumber} already exists`,
+        );
       }
     }
 
     if (updateRoomDto.type && updateRoomDto.type !== room.type) {
       const today = new Date().toISOString().split('T')[0];
-      const activeBookings = await this.bookingRepository.createQueryBuilder('booking')
+      const activeBookings = await this.bookingRepository
+        .createQueryBuilder('booking')
         .where('booking.room_id = :id', { id })
         .andWhere('booking.booking_status = :status', { status: 'confirmed' })
         .andWhere('booking.check_out_date >= :today', { today })
         .getCount();
-      
+
       if (activeBookings > 0) {
-        throw new BadRequestException('Cannot change room type because there are upcoming confirmed bookings for this room.');
+        throw new BadRequestException(
+          'Cannot change room type because there are upcoming confirmed bookings for this room.',
+        );
       }
     }
 
@@ -89,14 +113,17 @@ export class RoomsService {
     }
 
     const today = new Date().toISOString().split('T')[0];
-    const activeBookings = await this.bookingRepository.createQueryBuilder('booking')
+    const activeBookings = await this.bookingRepository
+      .createQueryBuilder('booking')
       .where('booking.room_id = :id', { id })
       .andWhere('booking.booking_status = :status', { status: 'confirmed' })
       .andWhere('booking.check_out_date >= :today', { today })
       .getCount();
-    
+
     if (activeBookings > 0) {
-      throw new BadRequestException('Cannot delete room because there are upcoming confirmed bookings.');
+      throw new BadRequestException(
+        'Cannot delete room because there are upcoming confirmed bookings.',
+      );
     }
 
     await this.roomRepository.softDelete(id);
