@@ -1,98 +1,104 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# BeReside Hotel Booking API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+BeReside is a modern, full-stack hotel management and booking API built with **NestJS**, **TypeORM**, and **PostgreSQL**. It features robust role-based access control, automated booking state management, and seamless payment processing via **Stripe**.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🚀 Features
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Authentication & Authorization
+- **JWT-based Authentication**: Secure login and registration.
+- **Role-Based Access Control (RBAC)**: Distinct permissions for `guest`, `staff`, and `admin` roles.
+- **Account Management**: Profile updates, secure password hashing (bcrypt), and password reset functionality.
+- **Soft Deletion**: Admins can soft-delete users to maintain historical booking records.
 
-## Project setup
+### Room & Booking Management
+- **Room Seeding**: Pre-configured automated database seeder for initial hotel room inventory.
+- **Overlap Prevention**: Intelligent booking system that prevents double-booking of rooms for overlapping dates.
+- **Dynamic Room States**: Rooms dynamically shift from `available` to `booked`, `occupied`, or `maintenance` based on booking lifecycles.
+- **Automated Tasks**: Scheduled cron jobs (`@nestjs/schedule`) continuously monitor for expired pending bookings and automatically release unpaid holds after a 10-minute window.
+
+### Financials & Payments
+- **Stripe Checkout**: Integrated with Stripe for secure credit card processing.
+- **Webhook Handlers**: Cryptographically verified webhook listeners process asynchronous payment confirmations to automatically confirm bookings.
+
+### Admin Dashboard & Operations
+- **Dashboard Metrics**: Admins can query real-time statistics including total revenue, occupancy rates, user counts, and booking volumes.
+- **Staff Operations**: Staff members have full visibility over all bookings and can manually override states (e.g., checking guests in/out).
+
+---
+
+## 🛠️ Technology Stack
+
+- **Framework**: [NestJS](https://nestjs.com/) (TypeScript)
+- **Database**: PostgreSQL with [TypeORM](https://typeorm.io/)
+- **Payments**: Stripe Checkout & Webhooks
+- **Containerization**: Docker & Docker Compose
+- **Testing**: Jest (Comprehensive unit test suites)
+
+---
+
+## 🐳 Getting Started
+
+### Prerequisites
+- [Docker](https://www.docker.com/) & Docker Compose
+- Node.js & npm (for local development)
+- [Stripe CLI](https://stripe.com/docs/stripe-cli) (for testing webhooks locally)
+
+### Installation & Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/hurstin/BeReside.git
+   cd BeReside
+   ```
+
+2. **Environment Variables:**
+   Ensure your `.env` file is configured with your Stripe API keys and database credentials.
+
+3. **Start the Application:**
+   Spin up the API and the PostgreSQL database using Docker Compose:
+   ```bash
+   docker compose up --build
+   ```
+   *The application will be available at `http://localhost:3000`.*
+
+### Testing Webhooks Locally
+
+Since Stripe cannot reach `localhost` directly, use the Stripe CLI to forward events to your local container:
 
 ```bash
-$ npm install
+# Login to Stripe CLI
+stripe login
+
+# Forward webhook events to the NestJS API
+stripe listen --forward-to localhost:3000/payments/webhook
 ```
 
-## Compile and run the project
+---
 
+## 🧪 Testing
+
+The project maintains a comprehensive unit testing suite covering services, controllers, and database mocking.
+
+To run the test suites:
 ```bash
-# development
-$ npm run start
+# Run unit tests
+npm run test
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# Run tests with coverage report
+npm run test:cov
 ```
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ npm run test
+## 📡 API Interaction (`request.http`)
 
-# e2e tests
-$ npm run test:e2e
+The project includes a `request.http` file at the root directory. This file serves as an executable collection of API requests. If you are using an editor like VS Code (with the REST Client extension) or WebStorm, you can directly execute these requests to test the API endpoints without needing tools like Postman.
 
-# test coverage
-$ npm run test:cov
-```
+It includes templates for:
+- Registering and authenticating users.
+- Querying and booking rooms.
+- Admin dashboard access and user role promotions. 
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+*(Make sure to update the `<replace-with-access-token>` placeholders with actual JWTs obtained from the login endpoint).*

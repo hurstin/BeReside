@@ -26,16 +26,15 @@ export class RoomsService {
   ): Promise<Room[]> {
     const query = this.roomRepository.createQueryBuilder('room');
 
-    if (status) {
-      query.andWhere('room.status = :status', { status });
-    }
-
     if (checkIn && checkOut) {
       if (!status) {
         query.andWhere('room.status = :defaultStatus', {
           defaultStatus: 'available',
         });
+      } else {
+        query.andWhere('room.status = :status', { status });
       }
+
       query.andWhere(
         `NOT EXISTS (
           SELECT 1 FROM bookings b 
@@ -46,11 +45,53 @@ export class RoomsService {
         )`,
         { checkIn, checkOut },
       );
+    } else {
+      if (status) {
+        query.andWhere('room.status = :status', { status });
+      }
     }
 
     query.orderBy('room.room_number', 'ASC');
+    const rooms = await query.getMany();
 
-    return query.getMany();
+    const todayStr = new Date().toISOString().split('T')[0];
+    const processedRooms: Room[] = [];
+
+    for (const room of rooms) {
+      const activeBookingCount = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .where('booking.room_id = :roomId', { roomId: room.id })
+        .andWhere('booking.booking_status = :status', { status: 'confirmed' })
+        .andWhere('booking.check_in_date <= :today', { today: todayStr })
+        .andWhere('booking.check_out_date > :today', { today: todayStr })
+        .getCount();
+
+      if (activeBookingCount > 0) {
+        if (room.status === 'available') {
+          room.status = 'booked';
+        }
+      } else {
+        if (room.status === 'booked' || room.status === 'occupied') {
+          room.status = 'available';
+        }
+      }
+
+      // Filter based on resolved status if status query parameter was provided
+      if (status === 'available' && room.status !== 'available') {
+        continue;
+      }
+      if (
+        (status === 'booked' || status === 'occupied') &&
+        room.status !== 'booked' &&
+        room.status !== 'occupied'
+      ) {
+        continue;
+      }
+
+      processedRooms.push(room);
+    }
+
+    return processedRooms;
   }
 
   async create(createRoomDto: CreateRoomDto): Promise<Room> {

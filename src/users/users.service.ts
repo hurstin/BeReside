@@ -54,4 +54,17 @@ export class UsersService {
     const newHash = await bcrypt.hash(updatePasswordDto.newPassword, 10);
     await this.usersRepository.update(id, { passwordHash: newHash });
   }
+
+  async findAll(): Promise<User[]> {
+    return this.usersRepository.find({
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async remove(id: string): Promise<void> {
+    const user = await this.findById(id);
+    if (!user) throw new NotFoundException('User not found');
+
+    await this.usersRepository.softRemove(user);
+  }
 }

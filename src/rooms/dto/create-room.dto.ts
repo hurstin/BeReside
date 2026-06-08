@@ -30,8 +30,8 @@ export class CreateRoomDto {
 
   @IsString()
   @IsOptional()
-  @IsIn(['available', 'maintenance', 'occupied'], {
-    message: 'Status must be available, maintenance, or occupied',
+  @IsIn(['available', 'maintenance', 'occupied', 'booked'], {
+    message: 'Status must be available, maintenance, occupied, or booked',
   })
   status?: string;
 }
