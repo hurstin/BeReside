@@ -68,8 +68,9 @@ Content-Type: application/json
 ### Get All Rooms
 # Retrieves all available rooms sorted by room number
 # Optional query parameters: checkIn, checkOut (YYYY-MM-DD)
-GET http://localhost:3000/rooms?checkIn=2026-06-01&checkOut=2026-06-05&status=maintenance
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI0YTFhNWY4Zi05YmE3LTRlOTQtOGQ3Yy1iZmNhMjNkN2NlYjgiLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3ODAyMjUzNzEsImV4cCI6MTc4MDIyODk3MX0.birye81M02Sg8jyKkcKEYyU6NhciPGDcglKDVmTEhLs
+# GET http://localhost:3000/rooms?checkIn=2026-06-01&checkOut=2026-06-05&status=available
+GET http://localhost:3000/rooms
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3ODA5Mjc4NzAsImV4cCI6MTc4MDkzMTQ3MH0.NGck2csZsYI7ylBtH27TyGFzZsKy9LP1LPR_uPSZtyY
 Accept: application/json
 
 ### Create a New Room (Admin only)
@@ -95,5 +96,76 @@ Content-Type: application/json
 }
 
 ### Delete a Room (Admin only, safe soft-delete)
-DELETE http://localhost:3000/rooms/<replace-with-room-uuid>
+DELETE http://localhost:3000/rooms/2bf594ef-560f-4082-b5f1-cee73c0fe145
 Authorization: Bearer <replace-with-admin-access-token>
+
+### Create a Booking
+POST http://localhost:3000/bookings
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3ODA5Mjc4NzAsImV4cCI6MTc4MDkzMTQ3MH0.NGck2csZsYI7ylBtH27TyGFzZsKy9LP1LPR_uPSZtyY
+Content-Type: application/json
+
+{
+  "roomId": "e3eaa4ca-3e5e-4130-846e-41ebd3c1c28c",
+  "checkInDate": "2026-06-08",
+  "checkOutDate": "2026-06-09"
+}
+
+### Get My Reservations
+GET http://localhost:3000/bookings/my-reservations
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3ODA5Mjc4NzAsImV4cCI6MTc4MDkzMTQ3MH0.NGck2csZsYI7ylBtH27TyGFzZsKy9LP1LPR_uPSZtyY
+Accept: application/json
+
+### Stripe Webhook (Do not use request.http, use Stripe CLI)
+# Run the following in terminal to test webhooks locally:
+# stripe listen --forward-to localhost:3000/payments/webhook
+# 
+# POST http://localhost:3000/payments/webhook
+
+### --- ADMIN & STAFF ENDPOINTS --- ###
+
+### Get All Users (Admin/Staff)
+GET http://localhost:3000/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3ODA5NDg5NzMsImV4cCI6MTc4MDk1MjU3M30.DZPwBOlrY6-GFXO0P_b21DavdKV1QQzJCGwwA-hO5KA
+Accept: application/json
+
+### Get Single User (Admin/Staff)
+GET http://localhost:3000/users/<replace-with-user-uuid>
+Authorization: Bearer <replace-with-admin-or-staff-token>
+Accept: application/json
+
+### Update User Role (Admin only)
+PATCH http://localhost:3000/users/<replace-with-user-uuid>/role
+Authorization: Bearer <replace-with-admin-token>
+Content-Type: application/json
+
+{
+  "role": "staff"
+}
+
+### Delete User (Admin only)
+DELETE http://localhost:3000/users/<replace-with-user-uuid>
+Authorization: Bearer <replace-with-admin-token>
+
+### Get All Bookings (Admin/Staff)
+GET http://localhost:3000/bookings
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3ODA5NDg5NzMsImV4cCI6MTc4MDk1MjU3M30.DZPwBOlrY6-GFXO0P_b21DavdKV1QQzJCGwwA-hO5KA
+Accept: application/json
+
+### Get Single Booking (Admin/Staff)
+GET http://localhost:3000/bookings/<replace-with-booking-uuid>
+Authorization: Bearer <replace-with-admin-or-staff-token>
+Accept: application/json
+
+### Update Booking Status (Admin/Staff)
+PATCH http://localhost:3000/bookings/<replace-with-booking-uuid>/status
+Authorization: Bearer <replace-with-admin-or-staff-token>
+Content-Type: application/json
+
+{
+  "status": "checked-in"
+}
+
+### Get Admin Dashboard Stats (Admin only)
+GET http://localhost:3000/admin/dashboard-stats
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3ODA5NDg5NzMsImV4cCI6MTc4MDk1MjU3M30.DZPwBOlrY6-GFXO0P_b21DavdKV1QQzJCGwwA-hO5KA
+Accept: application/json

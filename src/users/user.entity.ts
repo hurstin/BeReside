@@ -5,6 +5,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
 import { Booking } from '../bookings/booking.entity';
@@ -38,6 +39,14 @@ export class User {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt: Date;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
+  @Exclude()
+  deletedAt?: Date;
 
   @OneToMany(() => Booking, (booking) => booking.user)
   bookings: Booking[];

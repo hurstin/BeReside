@@ -8,4 +8,6 @@ export enum RoomType {
 export enum RoomStatus {
   AVAILABLE = 'available',
   MAINTENANCE = 'maintenance',
+  BOOKED = 'booked',
+  OCCUPIED = 'occupied',
 }

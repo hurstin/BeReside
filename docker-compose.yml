@@ -40,6 +40,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-password}
       DB_NAME: ${DB_NAME:-bereside_booking_db}
       DATABASE_URL: postgresql://${DB_USER:-bereside_admin}:${DB_PASSWORD:-password}@postgres:5432/${DB_NAME:-bereside_booking_db}?schema=public
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
     networks:
       - bereside-network
     depends_on:
