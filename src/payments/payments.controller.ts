@@ -12,7 +12,9 @@ import { Request, Response } from 'express';
 import Stripe from 'stripe';
 import { BookingsService } from '../bookings/bookings.service';
 import { Public } from '../common/decorators/public.decorator';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Payments')
 @Controller('payments')
 export class PaymentsController {
   constructor(
@@ -22,6 +24,11 @@ export class PaymentsController {
 
   @Public()
   @Post('webhook')
+  @ApiOperation({
+    summary: 'Stripe webhook handler',
+    description:
+      'Receives and processes asynchronous webhook events from Stripe (e.g., checkout.session.completed) to finalize payments and update booking statuses.',
+  })
   async handleWebhook(
     @Req() req: Request & { rawBody: Buffer },
     @Res() res: Response,

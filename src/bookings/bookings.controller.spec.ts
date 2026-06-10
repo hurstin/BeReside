@@ -1,5 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BookingsController } from './bookings.controller';
+import {
+  BookingsController,
+  AuthenticatedRequest,
+} from './bookings.controller';
 import { BookingsService } from './bookings.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -13,6 +16,7 @@ describe('BookingsController', () => {
     findAll: jest.Mock;
     findById: jest.Mock;
     updateStatus: jest.Mock;
+    cancelBooking: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -22,6 +26,7 @@ describe('BookingsController', () => {
       findAll: jest.fn(),
       findById: jest.fn(),
       updateStatus: jest.fn(),
+      cancelBooking: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -81,6 +86,19 @@ describe('BookingsController', () => {
         '1',
         'checked-in',
       );
+    });
+  });
+
+  describe('cancelBooking', () => {
+    it('should successfully call the service to cancel a booking', async () => {
+      const booking = { id: '1', bookingStatus: 'cancelled' } as Booking;
+      bookingsService.cancelBooking?.mockResolvedValue(booking);
+
+      const mockRequest: AuthenticatedRequest = { user: { sub: 'user1' } };
+
+      const result = await controller.cancelBooking('1', mockRequest);
+      expect(result).toEqual(booking);
+      expect(bookingsService.cancelBooking).toHaveBeenCalledWith('1', 'user1');
     });
   });
 });

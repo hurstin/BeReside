@@ -46,4 +46,6 @@ export class Room {
 
   @OneToMany(() => Booking, (booking) => booking.room)
   bookings: Booking[];
+
+  upcomingBookings?: { checkInDate: string; checkOutDate: string }[];
 }
