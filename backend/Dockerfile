@@ -9,7 +9,10 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install all dependencies including devDependencies (needed for nest build)
-RUN npm ci
+RUN npm set fetch-retry-mintimeout 20000 \
+    && npm set fetch-retry-maxtimeout 120000 \
+    && npm set fetch-retries 5 \
+    && npm ci
 
 # Copy the remaining project files
 COPY . .
@@ -28,7 +31,10 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install only production-needed packages to keep container light
-RUN npm ci --omit=dev
+RUN npm set fetch-retry-mintimeout 20000 \
+    && npm set fetch-retry-maxtimeout 120000 \
+    && npm set fetch-retries 5 \
+    && npm ci --omit=dev
 
 # Copy compilation artifacts from builder stage
 COPY --from=builder /usr/src/app/dist ./dist
