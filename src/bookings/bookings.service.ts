@@ -3,6 +3,8 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -51,9 +53,13 @@ export class BookingsService {
       );
     }
 
-    // Calculate nights
     const checkIn = new Date(checkInDate);
     const checkOut = new Date(checkOutDate);
+
+    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
+      throw new BadRequestException('Invalid date format');
+    }
+
     const timeDifference = checkOut.getTime() - checkIn.getTime();
     const nights = Math.ceil(timeDifference / (1000 * 3600 * 24));
 
@@ -61,9 +67,21 @@ export class BookingsService {
       throw new ConflictException('Check-out date must be after check-in date');
     }
 
-    // Calculate total cost
+    // Calculate total cost with weekend surcharge
     const basePrice = Number(room.basePricePerNight);
-    const totalPrice = nights * basePrice;
+    let totalPrice = 0;
+
+    for (let i = 0; i < nights; i++) {
+      const currentDay = new Date(checkIn.getTime() + i * 24 * 60 * 60 * 1000);
+      const dayOfWeek = currentDay.getDay();
+
+      // Friday (5) or Saturday (6) gets a 15% surcharge
+      if (dayOfWeek === 5 || dayOfWeek === 6) {
+        totalPrice += basePrice * 1.15;
+      } else {
+        totalPrice += basePrice;
+      }
+    }
 
     // Save State
     const booking = this.bookingRepository.create({
@@ -111,50 +129,43 @@ export class BookingsService {
       paymentStatus,
       bookingStatus,
     });
+  }
 
-    if (bookingStatus === 'confirmed') {
-      const booking = await this.bookingRepository.findOne({
-        where: { id: bookingId },
-        relations: { room: true },
-      });
-      if (booking && booking.room) {
-        const todayStr = new Date().toISOString().split('T')[0];
-        if (
-          booking.checkInDate <= todayStr &&
-          booking.checkOutDate > todayStr
-        ) {
-          if (booking.room.status === 'available') {
-            await this.roomRepository.update(booking.roomId, {
-              status: 'booked',
-            });
-          }
-        }
+  private mapVirtualRoomStatus(booking: Booking): Booking {
+    if (booking && booking.room && booking.bookingStatus === 'confirmed') {
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (booking.checkInDate <= todayStr && booking.checkOutDate > todayStr) {
+        booking.room.status = 'booked';
       }
     }
+    return booking;
   }
 
   async getUserBookings(userId: string): Promise<Booking[]> {
-    return this.bookingRepository.find({
+    const bookings = await this.bookingRepository.find({
       where: { userId },
       relations: { room: true },
       order: {
         createdAt: 'DESC',
       },
     });
+    return bookings.map((b) => this.mapVirtualRoomStatus(b));
   }
 
   async findAll(): Promise<Booking[]> {
-    return this.bookingRepository.find({
+    const bookings = await this.bookingRepository.find({
       relations: { user: true, room: true },
       order: { createdAt: 'DESC' },
     });
+    return bookings.map((b) => this.mapVirtualRoomStatus(b));
   }
 
   async findById(id: string): Promise<Booking | null> {
-    return this.bookingRepository.findOne({
+    const booking = await this.bookingRepository.findOne({
       where: { id },
       relations: { user: true, room: true },
     });
+    return booking ? this.mapVirtualRoomStatus(booking) : null;
   }
 
   async updateStatus(id: string, status: string): Promise<Booking> {
@@ -172,6 +183,34 @@ export class BookingsService {
       await this.roomRepository.update(booking.roomId, { status: 'available' });
     }
 
+    return (await this.findById(id)) as Booking;
+  }
+
+  async cancelBooking(id: string, userId: string): Promise<Booking> {
+    const booking = await this.findById(id);
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+    if (booking.userId !== userId) {
+      throw new ForbiddenException(
+        'You do not have permission to cancel this booking',
+      );
+    }
+
+    const checkInMidnight = new Date(booking.checkInDate);
+    checkInMidnight.setHours(0, 0, 0, 0);
+
+    const now = new Date();
+    const hoursUntilCheckIn =
+      (checkInMidnight.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    if (hoursUntilCheckIn < 48) {
+      throw new BadRequestException(
+        'Reservations cannot be cancelled within 48 hours of check-in',
+      );
+    }
+
+    await this.bookingRepository.update(id, { bookingStatus: 'cancelled' });
     return (await this.findById(id)) as Booking;
   }
 }

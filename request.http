@@ -26,7 +26,7 @@ Content-Type: application/json
 
 ### Get Current User Profile (Requires JWT token from Login)
 GET http://localhost:3000/users/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI0YTFhNWY4Zi05YmE3LTRlOTQtOGQ3Yy1iZmNhMjNkN2NlYjgiLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3ODAyMjUzNzEsImV4cCI6MTc4MDIyODk3MX0.birye81M02Sg8jyKkcKEYyU6NhciPGDcglKDVmTEhLs
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3ODEwMjY1NDksImV4cCI6MTc4MTAzMDE0OX0.xOKHJt9svhpuSoHANJg3V1mvcg0kS_CrqbgZjGD_1j4
 
 ### Update Current User Profile
 PATCH http://localhost:3000/users/me
@@ -69,8 +69,8 @@ Content-Type: application/json
 # Retrieves all available rooms sorted by room number
 # Optional query parameters: checkIn, checkOut (YYYY-MM-DD)
 # GET http://localhost:3000/rooms?checkIn=2026-06-01&checkOut=2026-06-05&status=available
-GET http://localhost:3000/rooms
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3ODA5Mjc4NzAsImV4cCI6MTc4MDkzMTQ3MH0.NGck2csZsYI7ylBtH27TyGFzZsKy9LP1LPR_uPSZtyY
+GET http://localhost:3000/rooms/9593fd0e-75a3-425b-a58c-f588cc3cb30a
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3ODEwODk3OTcsImV4cCI6MTc4MTA5MzM5N30.KOhOOOtXMEbWm3OmSxsZh8AHBJvsVLWmtX1SRqmUxIc
 Accept: application/json
 
 ### Create a New Room (Admin only)
@@ -101,18 +101,18 @@ Authorization: Bearer <replace-with-admin-access-token>
 
 ### Create a Booking
 POST http://localhost:3000/bookings
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3ODA5Mjc4NzAsImV4cCI6MTc4MDkzMTQ3MH0.NGck2csZsYI7ylBtH27TyGFzZsKy9LP1LPR_uPSZtyY
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3ODEwODk3OTcsImV4cCI6MTc4MTA5MzM5N30.KOhOOOtXMEbWm3OmSxsZh8AHBJvsVLWmtX1SRqmUxIc
 Content-Type: application/json
 
 {
-  "roomId": "e3eaa4ca-3e5e-4130-846e-41ebd3c1c28c",
-  "checkInDate": "2026-06-08",
-  "checkOutDate": "2026-06-09"
+  "roomId": "9593fd0e-75a3-425b-a58c-f588cc3cb30a",
+  "checkInDate": "2026-06-13",
+  "checkOutDate": "2026-06-14"
 }
 
 ### Get My Reservations
 GET http://localhost:3000/bookings/my-reservations
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiZ3Vlc3QiLCJpYXQiOjE3ODA5Mjc4NzAsImV4cCI6MTc4MDkzMTQ3MH0.NGck2csZsYI7ylBtH27TyGFzZsKy9LP1LPR_uPSZtyY
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3ODExMDY1NzAsImV4cCI6MTc4MTExMDE3MH0.P1qptqJeB9X1NQ5kI7hhGH2xfk5kemFBvLGEMLFGcHA
 Accept: application/json
 
 ### Stripe Webhook (Do not use request.http, use Stripe CLI)
@@ -148,7 +148,7 @@ Authorization: Bearer <replace-with-admin-token>
 
 ### Get All Bookings (Admin/Staff)
 GET http://localhost:3000/bookings
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3ODA5NDg5NzMsImV4cCI6MTc4MDk1MjU3M30.DZPwBOlrY6-GFXO0P_b21DavdKV1QQzJCGwwA-hO5KA
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3ODEwODk3OTcsImV4cCI6MTc4MTA5MzM5N30.KOhOOOtXMEbWm3OmSxsZh8AHBJvsVLWmtX1SRqmUxIc
 Accept: application/json
 
 ### Get Single Booking (Admin/Staff)

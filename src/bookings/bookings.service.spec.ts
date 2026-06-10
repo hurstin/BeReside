@@ -3,7 +3,11 @@ import { BookingsService } from './bookings.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Booking } from './booking.entity';
 import { Room } from '../rooms/room.entity';
-import { NotFoundException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 
 describe('BookingsService', () => {
   let service: BookingsService;
@@ -137,6 +141,59 @@ describe('BookingsService', () => {
       });
       expect(roomRepository.update).toHaveBeenCalledWith('r1', {
         status: 'available',
+      });
+    });
+  });
+
+  describe('cancelBooking', () => {
+    it('should throw ForbiddenException if user is not the owner', async () => {
+      const booking = {
+        id: '1',
+        userId: 'user1',
+        checkInDate: '2026-10-10',
+      } as unknown as Booking;
+      jest.spyOn(service, 'findById').mockResolvedValue(booking);
+
+      await expect(service.cancelBooking('1', 'user2')).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('should throw BadRequestException if within 48 hours of check-in', async () => {
+      // Mock current date to be exactly 24 hours before check-in midnight
+      const checkInDate = new Date();
+      checkInDate.setDate(checkInDate.getDate() + 1);
+
+      const booking = {
+        id: '1',
+        userId: 'user1',
+        checkInDate: checkInDate.toISOString().split('T')[0],
+      } as unknown as Booking;
+
+      jest.spyOn(service, 'findById').mockResolvedValue(booking);
+
+      await expect(service.cancelBooking('1', 'user1')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should successfully cancel booking if outside 48 hours', async () => {
+      // Mock check-in 5 days from now
+      const checkInDate = new Date();
+      checkInDate.setDate(checkInDate.getDate() + 5);
+
+      const booking = {
+        id: '1',
+        userId: 'user1',
+        checkInDate: checkInDate.toISOString().split('T')[0],
+      } as unknown as Booking;
+
+      jest.spyOn(service, 'findById').mockResolvedValue(booking);
+
+      await service.cancelBooking('1', 'user1');
+
+      expect(bookingRepository.update).toHaveBeenCalledWith('1', {
+        bookingStatus: 'cancelled',
       });
     });
   });

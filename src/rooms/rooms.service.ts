@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -76,6 +77,22 @@ export class RoomsService {
         }
       }
 
+      const upcomingBookings = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .where('booking.room_id = :roomId', { roomId: room.id })
+        .andWhere('booking.booking_status = :status', { status: 'confirmed' })
+        .andWhere('booking.check_in_date > :today', { today: todayStr })
+        .select(['booking.checkInDate', 'booking.checkOutDate'])
+        .orderBy('booking.checkInDate', 'ASC')
+        .getMany();
+
+      if (upcomingBookings.length > 0) {
+        room.upcomingBookings = upcomingBookings.map((b) => ({
+          checkInDate: b.checkInDate,
+          checkOutDate: b.checkOutDate,
+        }));
+      }
+
       // Filter based on resolved status if status query parameter was provided
       if (status === 'available' && room.status !== 'available') {
         continue;
@@ -92,6 +109,51 @@ export class RoomsService {
     }
 
     return processedRooms;
+  }
+
+  async findOne(id: string): Promise<Room> {
+    const room = await this.roomRepository.findOne({ where: { id } });
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const activeBookingCount = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .where('booking.room_id = :roomId', { roomId: room.id })
+      .andWhere('booking.booking_status = :status', { status: 'confirmed' })
+      .andWhere('booking.check_in_date <= :today', { today: todayStr })
+      .andWhere('booking.check_out_date > :today', { today: todayStr })
+      .getCount();
+
+    if (activeBookingCount > 0) {
+      if (room.status === 'available') {
+        room.status = 'booked';
+      }
+    } else {
+      if (room.status === 'booked' || room.status === 'occupied') {
+        room.status = 'available';
+      }
+    }
+
+    const upcomingBookings = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .where('booking.room_id = :roomId', { roomId: room.id })
+      .andWhere('booking.booking_status = :status', { status: 'confirmed' })
+      .andWhere('booking.check_in_date > :today', { today: todayStr })
+      .select(['booking.checkInDate', 'booking.checkOutDate'])
+      .orderBy('booking.checkInDate', 'ASC')
+      .getMany();
+
+    if (upcomingBookings.length > 0) {
+      room.upcomingBookings = upcomingBookings.map((b) => ({
+        checkInDate: b.checkInDate,
+        checkOutDate: b.checkOutDate,
+      }));
+    }
+
+    return room;
   }
 
   async create(createRoomDto: CreateRoomDto): Promise<Room> {
