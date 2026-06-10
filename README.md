@@ -90,6 +90,18 @@ npm run test
 npm run test:cov
 ```
 
+## 📖 API Documentation (Swagger)
+
+The BeReside API is fully documented using Swagger OpenAPI. 
+
+Once the application is running, you can access the interactive API documentation interface by navigating your browser to:
+**[http://localhost:3000/api](http://localhost:3000/api)**
+
+### Using the Swagger UI
+- **Interactive Testing**: You can test endpoints directly from the browser.
+- **Authentication**: To test protected routes, click the **Authorize** button at the top right of the Swagger UI and paste your JWT token (which you can acquire by hitting the `/auth/login` endpoint). 
+- **Schema Validation**: All request and response schemas, including exact data types and validations, are visually rendered for the frontend teams.
+
 ---
 
 ## 📡 API Interaction (`request.http`)
