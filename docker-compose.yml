@@ -13,7 +13,7 @@ services:
       POSTGRES_DB: ${DB_NAME:-bereside_booking_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./postgres-init:/docker-entrypoint-initdb.d
+      - ./backend/postgres-init:/docker-entrypoint-initdb.d
     networks:
       - bereside-network
     healthcheck:
@@ -24,7 +24,7 @@ services:
 
   api:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
       target: builder
     command: npm run start:dev
@@ -50,10 +50,10 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./src
+          path: ./backend/src
           target: /usr/src/app/src
         - action: rebuild
-          path: package.json
+          path: ./backend/package.json
 
 volumes:
   postgres_data:

@@ -112,7 +112,7 @@ Content-Type: application/json
 
 ### Get My Reservations
 GET http://localhost:3000/bookings/my-reservations
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3ODExMDY1NzAsImV4cCI6MTc4MTExMDE3MH0.P1qptqJeB9X1NQ5kI7hhGH2xfk5kemFBvLGEMLFGcHA
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJzdWIiOiI1OTdlYTgzNi02NjQ4LTQzYzgtYWYwOC1iMWZmMjcyOGI3OGEiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3ODExMjgzMjcsImV4cCI6MTc4MTEzMTkyN30.xKpQelor9rtL9I9d9nTZ-qDWicFAzTdnXNnKddQYLAg
 Accept: application/json
 
 ### Stripe Webhook (Do not use request.http, use Stripe CLI)
