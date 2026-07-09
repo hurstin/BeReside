@@ -36,6 +36,7 @@ export default function Navbar() {
           { name: 'Rooms', path: '/rooms' },
           { name: 'Restaurant', path: '/restaurant' },
           { name: 'Contact', path: '/contact' },
+          { name: 'Find Booking', path: '/find-booking' },
         ].map((link) => (
           <li key={link.name}>
             <Link
