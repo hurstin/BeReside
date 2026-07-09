@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Room } from "@/types";
 
 const mockRooms: Room[] = [
@@ -47,6 +47,7 @@ const mockRooms: Room[] = [
 
 export default function BookRoomPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
   const room = mockRooms.find(r => r.id === id);
 
@@ -92,11 +93,15 @@ export default function BookRoomPage() {
   const handleBooking = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate booking process
-    setTimeout(() => {
-      alert("Booking confirmed! (This is a mock)");
-      setIsSubmitting(false);
-    }, 1500);
+    
+    const queryParams = new URLSearchParams({
+      roomId: room.id,
+      checkIn,
+      checkOut,
+      guests
+    });
+    
+    router.push(`/checkout?${queryParams.toString()}`);
   };
 
   return (

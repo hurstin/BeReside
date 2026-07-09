@@ -39,6 +39,11 @@ export default function Footer() {
           </h4>
           <ul className="list-none flex flex-col gap-2">
             <li>
+              <Link href="/find-booking" className="text-[13px] text-driftwood no-underline cursor-pointer transition-colors duration-200 hover:text-amber">
+                Find My Booking
+              </Link>
+            </li>
+            <li>
               <Link href="#" className="text-[13px] text-driftwood no-underline cursor-pointer transition-colors duration-200 hover:text-amber">
                 Try our app
               </Link>
