@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --forest: #2D3720;
+  --olive: #4A5C1A;
+  --fern: #6B8024;
+  --sage: #8DA44C;
+  --amber: #C97D1A;
+  --gold: #D4A84B;
+  --honey: #F0C46A;
+  --cream: #F5F0E8;
+  --linen: #EDE8DE;
+  --sand: #DDD8CC;
+  --stone: #9E9888;
+  --driftwood: #7A7463;
+  --charcoal: #3E3E35;
+  --teal: #2E8B70;
+  --coral: #E8593C;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--cream);
+  color: var(--charcoal);
+  overflow-x: hidden;
+  font-weight: 300;
+}
+
+/* Animations */
+@keyframes scrollAnim {
+  0%,100% { opacity: 0.4; transform: scaleY(1); }
+  50% { opacity: 1; transform: scaleY(1.15); }
+}
+
+.animate-scrollAnim {
+  animation: scrollAnim 2s ease-in-out infinite;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  animation: fadeUp 0.7s ease forwards;
+}
+
+.fade-up-1 { animation-delay: 0.1s; }
+.fade-up-2 { animation-delay: 0.25s; }
+.fade-up-3 { animation-delay: 0.4s; }
+.fade-up-4 { animation-delay: 0.55s; }
