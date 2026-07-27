@@ -1,0 +1,70 @@
+databases:
+  # ---------------------------------------------------------
+  # 1. PostgreSQL Database
+  # ---------------------------------------------------------
+  - name: bereside-db
+    plan: free # Change to 'starter' or higher for production workloads
+    postgresMajorVersion: "16"
+
+services:
+  # ---------------------------------------------------------
+  # 2. Backend API (NestJS)
+  # ---------------------------------------------------------
+  - type: web
+    name: bereside-api
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    envVars:
+      # Database connection (automatically populated from the DB above)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bereside-db
+          property: connectionString
+      - key: DB_HOST
+        fromDatabase:
+          name: bereside-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: bereside-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: bereside-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: bereside-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: bereside-db
+          property: database
+      
+      # Secrets (You will enter these securely in the Render Dashboard)
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        sync: false
+      - key: EMAIL_USERNAME
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+
+  # ---------------------------------------------------------
+  # 3. Frontend (Next.js)
+  # ---------------------------------------------------------
+  - type: web
+    name: bereside-frontend
+    env: docker
+    dockerfilePath: ./frontend/Dockerfile
+    plan: free
+    envVars:
+      # Link the frontend to the backend's URL dynamically
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
