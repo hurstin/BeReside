@@ -9,6 +9,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(
     new ClassSerializerInterceptor(app.get('Reflector')),
   );
+  app.enableCors();
 
   const config = new DocumentBuilder()
     .setTitle('BeReside API')

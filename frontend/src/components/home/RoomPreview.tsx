@@ -65,8 +65,8 @@ export function RoomPreview() {
 
   return (
     <section>
-      <div className="px-16 pt-24 pb-0">
-        <div className="flex justify-between items-end mb-12">
+      <div className="px-6 md:px-16 pt-16 md:pt-24 pb-0">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
           <div>
             <p className="text-[10px] tracking-[0.22em] text-amber font-medium mb-4 uppercase">
               Accommodations
@@ -83,7 +83,7 @@ export function RoomPreview() {
           </Link>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-0.5 bg-forest/5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-0.5 bg-forest/5">
         {previewRooms.map(room => (
           <RoomCard key={room.id} room={room} />
         ))}

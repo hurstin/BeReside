@@ -1,62 +1,101 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Room } from "@/types";
+import { apiFetch } from "@/lib/api";
 
-const mockRooms: Room[] = [
-  {
-    id: '1',
-    name: 'Family Room',
-    pricePerNight: 450,
-    description: 'Welcome to our charming Bed & Breakfast, located in a picturesque area away from the hustle and bustle of the city. Turpis et leo duis diam platea nulla habitant vivamus vel.',
-    amenities: ['2 Single beds', '1 Double bed', '32m²'],
-    maxOccupancy: 4,
-    type: 'family',
-  },
-  {
-    id: '2',
-    name: 'Double Room',
-    pricePerNight: 350,
-    description: 'Elegant double room with garden views, featuring a plush king bed, marble bathroom, and curated amenities for the discerning traveller seeking comfort and refinement.',
-    amenities: ['1 King bed', 'Garden view', '28m²'],
-    maxOccupancy: 2,
-    type: 'double',
-    isTopChoice: true,
-  },
-  {
-    id: '3',
-    name: 'Queen Room',
-    pricePerNight: 320,
-    description: 'A spacious sanctuary with a queen bed and courtyard views. Thoughtfully appointed with organic textures and natural light for complete tranquillity.',
-    amenities: ['1 Queen bed', 'Courtyard view', '36m²'],
-    maxOccupancy: 2,
-    type: 'double',
-  },
-  {
-    id: '4',
-    name: 'Apartment',
-    pricePerNight: 500,
-    description: 'Our most spacious offering — a private studio apartment with full kitchen, living area, and panoramic views. The ultimate retreat for extended stays.',
-    amenities: ['Full kitchen', 'Panoramic view', '58m²'],
-    maxOccupancy: 4,
-    type: 'apartment',
+// This is the combined type we need for the UI
+export interface UIRoom {
+  id: string;
+  name: string;
+  pricePerNight: number;
+  description: string;
+  amenities: string[];
+  maxOccupancy: number;
+  type: string;
+  isTopChoice?: boolean;
+}
+
+// Maps a raw backend room to the rich UI format
+function mapBackendRoomToUI(backendRoom: any): UIRoom {
+  const t = backendRoom.type.toLowerCase();
+  
+  let name = `Room ${backendRoom.roomNumber}`;
+  let description = "Experience the perfect blend of luxury and comfort in our meticulously designed rooms.";
+  let amenities = ['Free WiFi', 'Daily Housekeeping'];
+  let maxOccupancy = 2;
+  let isTopChoice = false;
+
+  if (t === 'family') {
+    name = `Family Room - ${backendRoom.roomNumber}`;
+    description = 'Welcome to our charming family room, located in a picturesque area. Perfect for a family getaway.';
+    amenities = ['2 Single beds', '1 Double bed', '32m²'];
+    maxOccupancy = 4;
+  } else if (t === 'double') {
+    name = `Double Room - ${backendRoom.roomNumber}`;
+    description = 'Elegant double room with garden views, featuring a plush king bed, marble bathroom, and curated amenities.';
+    amenities = ['1 King bed', 'Garden view', '28m²'];
+    maxOccupancy = 2;
+    isTopChoice = true;
+  } else if (t === 'apartment') {
+    name = `Apartment - ${backendRoom.roomNumber}`;
+    description = 'Our most spacious offering — a private studio apartment with full kitchen, living area, and panoramic views.';
+    amenities = ['Full kitchen', 'Panoramic view', '58m²'];
+    maxOccupancy = 4;
   }
-];
+
+  return {
+    id: backendRoom.id,
+    name,
+    pricePerNight: Number(backendRoom.basePricePerNight),
+    description,
+    amenities,
+    maxOccupancy,
+    type: backendRoom.type,
+    isTopChoice,
+  };
+}
 
 export default function BookRoomPage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
-  const room = mockRooms.find(r => r.id === id);
+  
+  const [room, setRoom] = useState<UIRoom | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState("1");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!room) {
+  useEffect(() => {
+    const fetchRoom = async () => {
+      try {
+        const data = await apiFetch<any>(`/rooms/${id}`);
+        setRoom(mapBackendRoomToUI(data));
+      } catch (err: any) {
+        setError("Room not found");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (id) {
+      fetchRoom();
+    }
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-forest flex items-center justify-center pt-32">
+        <div className="w-8 h-8 border-2 border-sand border-t-cream rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !room) {
     return (
       <div className="min-h-screen bg-forest flex items-center justify-center pt-32">
         <div className="text-center">
@@ -82,14 +121,6 @@ export default function BookRoomPage() {
   const taxes = Math.round(total * 0.1);
   const grandTotal = total + taxes;
 
-  const index = parseInt(room.id, 10) - 1;
-  const visualClass = [
-    'from-[#2D3720] to-[#4a5c28]',
-    'from-[#1e2810] to-[#384822]',
-    'from-[#252c18] to-[#3a4824]',
-    'from-[#1a2210] to-[#2e3c1e]'
-  ][(isNaN(index) ? 0 : index) % 4];
-
   const handleBooking = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -104,10 +135,12 @@ export default function BookRoomPage() {
     router.push(`/checkout?${queryParams.toString()}`);
   };
 
+  const visualClass = 'from-[#1e2810] to-[#384822]';
+
   return (
     <main className="min-h-screen bg-linen pb-24">
       {/* Hero */}
-      <div className="bg-forest pt-[180px] pb-16 px-8 md:px-16 relative overflow-hidden">
+      <div className="bg-forest pt-[120px] md:pt-[180px] pb-12 md:pb-16 px-6 md:px-16 relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: "url('/pattern-page.svg')" }}></div>
         <div className="max-w-6xl mx-auto relative">
           <Link href="/rooms" className="text-gold text-xs font-medium uppercase tracking-[0.2em] mb-6 inline-block hover:text-cream transition-colors">
@@ -122,7 +155,7 @@ export default function BookRoomPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-8 md:px-16 mt-12 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-16">
+      <div className="max-w-6xl mx-auto px-6 md:px-16 mt-8 md:mt-12 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-16">
         {/* Left Col: Details */}
         <div>
           <div className={`w-full aspect-[16/9] rounded-none overflow-hidden bg-gradient-to-br ${visualClass} relative mb-14 border border-sand`}>
@@ -139,7 +172,7 @@ export default function BookRoomPage() {
           </div>
 
           <h2 className="font-display text-[32px] text-forest mb-8 border-b border-sand pb-4">Room Highlights</h2>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-4 mb-14">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 mb-14">
             {room.amenities.map(amenity => (
               <div key={amenity} className="flex items-center gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-sage"></span>
@@ -180,7 +213,7 @@ export default function BookRoomPage() {
             </div>
 
             <form onSubmit={handleBooking} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-medium text-stone uppercase tracking-[0.15em] mb-2">Check-in</label>
                   <input 

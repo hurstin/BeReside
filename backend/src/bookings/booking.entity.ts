@@ -46,6 +46,42 @@ export class Booking {
   })
   bookingStatus: string;
 
+  @Column({ name: 'stripe_payment_intent_id', type: 'varchar', nullable: true })
+  stripePaymentIntentId: string | null;
+
+  @Column({
+    name: 'refunded_amount',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    default: 0,
+  })
+  refundedAmount: number;
+
+  @Column({ name: 'check_in_pin', type: 'varchar', length: 10, nullable: true })
+  checkInPin: string | null;
+
+  @Column({ name: 'checked_in_by_id', type: 'uuid', nullable: true })
+  checkedInById: string | null;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'checked_in_by_id' })
+  checkedInBy: User | null;
+
+  @Column({
+    name: 'actual_check_in_time',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
+  actualCheckInTime: Date | null;
+
+  @Column({
+    name: 'actual_check_out_time',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
+  actualCheckOutTime: Date | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt: Date;
 
@@ -59,4 +95,7 @@ export class Booking {
   @ManyToOne(() => Room, (room) => room.bookings, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'room_id' })
   room: Room;
+
+  @Column({ name: 'is_no_show', type: 'boolean', default: false })
+  isNoShow: boolean;
 }

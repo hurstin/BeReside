@@ -1,6 +1,6 @@
 export default function TestimonialSection() {
   return (
-    <div className="bg-linen text-center px-16 py-24">
+    <div className="bg-linen text-center px-6 md:px-16 py-16 md:py-24">
       <div className="text-amber text-[14px]">★★★★★</div>
       <p className="font-display text-[clamp(20px,3vw,32px)] font-normal text-forest leading-[1.5] max-w-[720px] mx-auto mt-5 mb-8 italic">
         &quot;Consectetuer nisl sociosqu vivamus purus et hendrerit a netus

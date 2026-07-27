@@ -45,7 +45,6 @@ export class User {
     type: 'timestamp with time zone',
     nullable: true,
   })
-  @Exclude()
   deletedAt?: Date;
 
   @OneToMany(() => Booking, (booking) => booking.user)

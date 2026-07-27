@@ -4,7 +4,7 @@ export default function OurHotelPage() {
   return (
     <main className="min-h-screen bg-cream">
       {/* Hero */}
-      <div className="bg-forest pt-[224px] pb-20 px-16 relative overflow-hidden">
+      <div className="bg-forest pt-[140px] md:pt-[224px] pb-12 md:pb-20 px-6 md:px-16 relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: "url('/pattern-page.svg')" }}></div>
         <p className="text-[10px] tracking-[0.22em] text-gold uppercase mb-4 relative">
           About Us
@@ -19,13 +19,13 @@ export default function OurHotelPage() {
       </div>
 
       {/* Grid 2 */}
-      <div className="grid grid-cols-2 gap-0.5">
-        <div className="relative overflow-hidden min-h-[520px] bg-forest">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-0.5">
+        <div className="relative overflow-hidden min-h-[300px] md:min-h-[520px] bg-forest">
           <div className="absolute inset-0 bg-gradient-to-br from-[#1a2212] to-[#3a4c28] flex items-center justify-center">
-            <span className="font-display text-[180px] text-white/5 font-semibold">B</span>
+            <span className="font-display text-[120px] md:text-[180px] text-white/5 font-semibold">B</span>
           </div>
         </div>
-        <div className="p-[72px] bg-linen">
+        <div className="p-8 md:p-[72px] bg-linen">
           <p className="text-[10px] tracking-[0.22em] text-amber font-medium mb-4 uppercase">
             Our Story
           </p>
@@ -46,12 +46,12 @@ export default function OurHotelPage() {
       </div>
 
       {/* Stats bar */}
-      <div className="bg-forest p-16 grid grid-cols-3 gap-0">
-        <div className="text-center px-8 border-r border-white/10">
+      <div className="bg-forest p-8 md:p-16 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0">
+        <div className="text-center px-8 md:border-r border-b md:border-b-0 pb-8 md:pb-0 border-white/10">
           <div className="font-display text-[56px] font-normal text-cream leading-none mb-2">250</div>
           <div className="text-[12px] text-stone tracking-[0.1em] leading-relaxed uppercase">Rooms available</div>
         </div>
-        <div className="text-center px-8 border-r border-white/10">
+        <div className="text-center px-8 md:border-r border-b md:border-b-0 pb-8 md:pb-0 border-white/10">
           <div className="font-display text-[56px] font-normal text-cream leading-none mb-2">120<span className="text-[24px] text-gold">k</span></div>
           <div className="text-[12px] text-stone tracking-[0.1em] leading-relaxed uppercase">Happy guests</div>
         </div>
@@ -64,11 +64,11 @@ export default function OurHotelPage() {
       {/* Large Image Section */}
       <div className="relative h-[480px] overflow-hidden bg-forest">
         <div className="absolute inset-0 bg-gradient-to-br from-[#1a2212] via-[#2D3720] to-[#4a5c28] flex items-center justify-center">
-          <div className="text-center">
-            <span className="font-display text-[36px] italic text-cream/15">Our rooms are your own personal sanctuary</span>
+          <div className="text-center px-6">
+            <span className="font-display text-[28px] md:text-[36px] italic text-cream/15">Our rooms are your own personal sanctuary</span>
           </div>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-forest/85 to-transparent flex items-center p-16">
+        <div className="absolute inset-0 bg-gradient-to-r from-forest/85 to-transparent flex items-center p-8 md:p-16">
           <div>
             <h2 className="font-display text-[44px] text-cream font-normal max-w-[380px] leading-[1.2]">
               Our rooms are your own <em className="italic text-gold">personal</em> sanctuary
@@ -81,15 +81,15 @@ export default function OurHotelPage() {
       </div>
 
       {/* Team Section */}
-      <section className="px-16 pt-24 pb-12">
+      <section className="px-6 md:px-16 pt-16 md:pt-24 pb-8 md:pb-12">
         <p className="text-[10px] tracking-[0.22em] text-amber font-medium mb-4 uppercase">The Team</p>
         <h2 className="font-display text-[clamp(32px,4vw,52px)] font-normal text-forest leading-[1.1] mb-6">
           Meet our <em className="italic text-amber">people</em>
         </h2>
       </section>
 
-      <div className="grid grid-cols-2 gap-0.5 mb-0.5">
-        <div className="p-14 bg-linen flex gap-7 items-start transition-colors duration-200 hover:bg-sand">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-0.5 mb-0.5">
+        <div className="p-8 md:p-14 bg-linen flex flex-col sm:flex-row gap-7 items-start transition-colors duration-200 hover:bg-sand">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#c97d1a] to-[#2D3720] shrink-0 flex items-center justify-center font-display text-[24px] text-white italic">
             E
           </div>
@@ -104,7 +104,7 @@ export default function OurHotelPage() {
             </div>
           </div>
         </div>
-        <div className="p-14 bg-linen flex gap-7 items-start transition-colors duration-200 hover:bg-sand">
+        <div className="p-8 md:p-14 bg-linen flex flex-col sm:flex-row gap-7 items-start transition-colors duration-200 hover:bg-sand">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#2e8b70] to-[#2D3720] shrink-0 flex items-center justify-center font-display text-[24px] text-white italic">
             J
           </div>

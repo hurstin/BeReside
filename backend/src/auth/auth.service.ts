@@ -10,12 +10,14 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { User } from '../users/user.entity';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
   async validateUser(
@@ -50,12 +52,13 @@ export class AuthService {
       throw new ConflictException('Email already in use');
     }
 
-    const { password, ...rest } = createUserDto;
+    const { password, role, ...rest } = createUserDto;
     Reflect.deleteProperty(rest, 'passwordConfirm');
     const passwordHash = await bcrypt.hash(password, 10);
 
     return this.usersService.create({
       ...rest,
+      role: role || 'staff', // Register as staff by default
       passwordHash,
     });
   }
@@ -73,12 +76,11 @@ export class AuthService {
     const payload = { sub: user.id, purpose: 'reset-password' };
     const resetToken = this.jwtService.sign(payload, { expiresIn: '15m' });
 
-    // In a real application, you would send an email here instead of returning the token
-    // For local development, returning it so it can be tested
+    await this.mailService.sendPasswordResetEmail(user.email, resetToken);
+
     return {
       message:
         'If an account exists with that email, a reset link has been sent.',
-      development_token: resetToken, // remove in production
     };
   }
 

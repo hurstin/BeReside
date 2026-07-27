@@ -20,8 +20,8 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "BeHotel — Since 1989",
-  description: "Luxury hospitality since 1989.",
+  title: "BeReside — Since 2026",
+  description: "Experience luxury and comfort at BeReside. Discover our suites, amenities, and exceptional service.",
 };
 
 export default function RootLayout({

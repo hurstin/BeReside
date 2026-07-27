@@ -1,24 +1,69 @@
 "use client";
 
-import React from 'react';
-import { DollarSign, CalendarDays, Bed, Users, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { DollarSign, CalendarDays, Bed, Users, ArrowUpRight, ArrowDownRight, AlertCircle } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
-const stats = [
-  { name: 'Total Revenue', value: '$45,231.89', change: '+20.1%', trend: 'up', icon: DollarSign },
-  { name: 'Active Bookings', value: '+573', change: '+12.5%', trend: 'up', icon: CalendarDays },
-  { name: 'Available Rooms', value: '12', change: '-2.4%', trend: 'down', icon: Bed },
-  { name: 'Active Staff', value: '24', change: '+0.0%', trend: 'neutral', icon: Users },
-];
-
-const recentBookings = [
-  { id: 'BK-7829', guest: 'Michael Chen', room: '302', date: 'Oct 24, 2026', amount: '$450.00', status: 'Confirmed' },
-  { id: 'BK-7828', guest: 'Sarah Wilson', room: '105', date: 'Oct 23, 2026', amount: '$320.00', status: 'Checked In' },
-  { id: 'BK-7827', guest: 'Emma Thompson', room: '401', date: 'Oct 23, 2026', amount: '$850.00', status: 'Confirmed' },
-  { id: 'BK-7826', guest: 'James Rodriguez', room: '208', date: 'Oct 22, 2026', amount: '$290.00', status: 'Checked Out' },
-  { id: 'BK-7825', guest: 'Olivia Davis', room: '503', date: 'Oct 22, 2026', amount: '$600.00', status: 'Cancelled' },
-];
+interface DashboardStats {
+  totalUsers: number;
+  totalRooms: number;
+  occupiedRooms: number;
+  occupancyRate: number;
+  totalRevenue: number;
+  pendingBookings: number;
+  confirmedBookings: number;
+}
 
 export default function DashboardPage() {
+  const [data, setData] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const stats = await apiFetch<DashboardStats>('/admin/dashboard-stats');
+        setData(stats);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[500px]">
+        <div className="w-8 h-8 border-2 border-zinc-500 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-500/10 border border-red-500/50 p-6 rounded-2xl flex items-start gap-4">
+        <AlertCircle className="w-6 h-6 text-red-400 shrink-0" />
+        <div>
+          <h3 className="text-lg font-medium text-red-400">Error Loading Dashboard</h3>
+          <p className="text-red-400/80 mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  };
+
+  const stats = [
+    { name: 'Total Revenue (Paid)', value: formatCurrency(data?.totalRevenue || 0), change: 'Total collected', trend: 'neutral', icon: DollarSign },
+    { name: 'Confirmed Bookings', value: data?.confirmedBookings.toString() || '0', change: `${data?.pendingBookings || 0} Pending`, trend: data?.pendingBookings && data.pendingBookings > 0 ? 'up' : 'neutral', icon: CalendarDays },
+    { name: 'Total Rooms', value: data?.totalRooms.toString() || '0', change: `Occupancy: ${data?.occupancyRate || 0}%`, trend: data?.occupancyRate && data.occupancyRate > 50 ? 'up' : 'neutral', icon: Bed },
+    { name: 'Total Users', value: data?.totalUsers.toString() || '0', change: 'Registered', trend: 'neutral', icon: Users },
+  ];
+
   return (
     <div className="space-y-8">
       <div>
@@ -50,48 +95,14 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Recent Bookings Table */}
+      {/* Recent Activity */}
       <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl overflow-hidden">
-        <div className="px-6 py-5 border-b border-zinc-800/50 flex justify-between items-center">
-          <h3 className="text-lg font-medium text-white">Recent Activity</h3>
-          <button className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">
-            View all
-          </button>
+        <div className="p-6 border-b border-zinc-800/50">
+          <h2 className="text-lg font-medium text-white">Recent Activity</h2>
+          <p className="text-sm text-zinc-400 mt-1">Latest bookings from customers.</p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-zinc-400 uppercase bg-zinc-950/50 border-b border-zinc-800/50">
-              <tr>
-                <th className="px-6 py-4 font-medium">Booking ID</th>
-                <th className="px-6 py-4 font-medium">Guest</th>
-                <th className="px-6 py-4 font-medium">Room</th>
-                <th className="px-6 py-4 font-medium">Date</th>
-                <th className="px-6 py-4 font-medium">Amount</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/50">
-              {recentBookings.map((booking) => (
-                <tr key={booking.id} className="hover:bg-zinc-800/20 transition-colors">
-                  <td className="px-6 py-4 font-medium text-zinc-300">{booking.id}</td>
-                  <td className="px-6 py-4 text-white">{booking.guest}</td>
-                  <td className="px-6 py-4 text-zinc-400">{booking.room}</td>
-                  <td className="px-6 py-4 text-zinc-400">{booking.date}</td>
-                  <td className="px-6 py-4 text-zinc-300">{booking.amount}</td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                      booking.status === 'Confirmed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                      booking.status === 'Checked In' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                      booking.status === 'Checked Out' ? 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' :
-                      'bg-red-500/10 text-red-400 border-red-500/20'
-                    }`}>
-                      {booking.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="p-6">
+          <p className="text-zinc-500 text-sm">For full details, please visit the <a href="/admin/bookings" className="text-indigo-400 hover:underline">Bookings tab</a>.</p>
         </div>
       </div>
     </div>

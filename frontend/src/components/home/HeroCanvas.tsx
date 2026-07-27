@@ -4,12 +4,12 @@ import Link from "next/link";
 
 export default function HeroCanvas() {
   return (
-    <div className="relative h-screen flex items-end px-16 pb-20 overflow-hidden bg-forest">
+    <div className="relative h-screen flex items-end px-6 md:px-16 pb-12 md:pb-20 overflow-hidden bg-forest">
       <div className="absolute inset-0 bg-gradient-to-br from-[#1a2212] via-[#2D3720] to-[#3a4a28]"></div>
       <div className="absolute inset-0 opacity-[0.018]" style={{ backgroundImage: "url('/pattern-hero.svg')" }}></div>
       <div className="relative z-10 max-w-[700px]">
         <p className="text-[11px] tracking-[0.2em] text-gold mb-5 font-normal fade-up fade-up-1 uppercase">
-          LUXURY HOSPITALITY SINCE 1989
+          LUXURY HOSPITALITY SINCE 2026
         </p>
         <h1 className="font-display text-[clamp(52px,8vw,88px)] font-normal text-cream leading-[1.05] mb-7 fade-up fade-up-2">
           Welcome to our<br />

@@ -1,13 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { BookingsService } from './bookings.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Booking } from './booking.entity';
 import { Room } from '../rooms/room.entity';
-import {
-  NotFoundException,
-  ForbiddenException,
-  BadRequestException,
-} from '@nestjs/common';
+import { User } from '../users/user.entity';
+import { JwtService } from '@nestjs/jwt';
+import { MailService } from '../mail/mail.service';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
 describe('BookingsService', () => {
   let service: BookingsService;
@@ -19,7 +19,25 @@ describe('BookingsService', () => {
   let roomRepository: {
     update: jest.Mock;
   };
-  let stripeClient: { checkout: { sessions: { create: jest.Mock } } };
+  let userRepository: {
+    findOne: jest.Mock;
+    create: jest.Mock;
+    save: jest.Mock;
+  };
+  let jwtService: {
+    sign: jest.Mock;
+    verify: jest.Mock;
+  };
+  let mailService: {
+    sendPaymentReceipt: jest.Mock;
+    sendMagicLink: jest.Mock;
+    sendCancellationNotice: jest.Mock;
+    sendCheckOutReceipt: jest.Mock;
+  };
+  let stripeClient: {
+    checkout: { sessions: { create: jest.Mock } };
+    refunds: { create: jest.Mock };
+  };
 
   beforeEach(async () => {
     bookingRepository = {
@@ -32,11 +50,32 @@ describe('BookingsService', () => {
       update: jest.fn(),
     };
 
+    userRepository = {
+      findOne: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+    };
+
+    jwtService = {
+      sign: jest.fn(),
+      verify: jest.fn(),
+    };
+
+    mailService = {
+      sendPaymentReceipt: jest.fn(),
+      sendMagicLink: jest.fn(),
+      sendCancellationNotice: jest.fn(),
+      sendCheckOutReceipt: jest.fn(),
+    };
+
     stripeClient = {
       checkout: {
         sessions: {
           create: jest.fn(),
         },
+      },
+      refunds: {
+        create: jest.fn(),
       },
     };
 
@@ -55,6 +94,18 @@ describe('BookingsService', () => {
           provide: 'STRIPE_CLIENT',
           useValue: stripeClient,
         },
+        {
+          provide: getRepositoryToken(User),
+          useValue: userRepository,
+        },
+        {
+          provide: JwtService,
+          useValue: jwtService,
+        },
+        {
+          provide: MailService,
+          useValue: mailService,
+        },
       ],
     }).compile();
 
@@ -72,7 +123,7 @@ describe('BookingsService', () => {
 
       const result = await service.findAll();
       expect(bookingRepository.find).toHaveBeenCalledWith({
-        relations: { user: true, room: true },
+        relations: { user: true, room: true, checkedInBy: true },
         order: { createdAt: 'DESC' },
       });
       expect(result).toEqual(bookings);
@@ -87,7 +138,7 @@ describe('BookingsService', () => {
       const result = await service.findById('1');
       expect(bookingRepository.findOne).toHaveBeenCalledWith({
         where: { id: '1' },
-        relations: { user: true, room: true },
+        relations: { user: true, room: true, checkedInBy: true },
       });
       expect(result).toEqual(booking);
     });
@@ -108,9 +159,13 @@ describe('BookingsService', () => {
 
       await service.updateStatus('1', 'checked-in');
 
-      expect(bookingRepository.update).toHaveBeenCalledWith('1', {
-        bookingStatus: 'checked-in',
-      });
+      expect(bookingRepository.update).toHaveBeenCalledWith(
+        '1',
+        expect.objectContaining({
+          bookingStatus: 'checked-in',
+          actualCheckInTime: expect.any(Date),
+        } as any),
+      );
       expect(roomRepository.update).toHaveBeenCalledWith('r1', {
         status: 'occupied',
       });
@@ -122,9 +177,13 @@ describe('BookingsService', () => {
 
       await service.updateStatus('1', 'completed');
 
-      expect(bookingRepository.update).toHaveBeenCalledWith('1', {
-        bookingStatus: 'completed',
-      });
+      expect(bookingRepository.update).toHaveBeenCalledWith(
+        '1',
+        expect.objectContaining({
+          bookingStatus: 'completed',
+          actualCheckOutTime: expect.any(Date),
+        } as any),
+      );
       expect(roomRepository.update).toHaveBeenCalledWith('r1', {
         status: 'available',
       });
@@ -159,7 +218,7 @@ describe('BookingsService', () => {
       );
     });
 
-    it('should throw BadRequestException if within 48 hours of check-in', async () => {
+    it('should successfully cancel booking and apply a 50% penalty if within 48 hours of check-in', async () => {
       // Mock current date to be exactly 24 hours before check-in midnight
       const checkInDate = new Date();
       checkInDate.setDate(checkInDate.getDate() + 1);
@@ -168,16 +227,25 @@ describe('BookingsService', () => {
         id: '1',
         userId: 'user1',
         checkInDate: checkInDate.toISOString().split('T')[0],
+        totalPrice: 100,
+        paymentStatus: 'paid',
+        stripePaymentIntentId: 'pi_test',
       } as unknown as Booking;
 
       jest.spyOn(service, 'findById').mockResolvedValue(booking);
 
-      await expect(service.cancelBooking('1', 'user1')).rejects.toThrow(
-        BadRequestException,
+      await service.cancelBooking('1', 'user1');
+      expect(bookingRepository.update).toHaveBeenCalledWith(
+        '1',
+        expect.objectContaining({
+          bookingStatus: 'cancelled',
+          paymentStatus: 'partially_refunded',
+          refundedAmount: 50,
+        }),
       );
     });
 
-    it('should successfully cancel booking if outside 48 hours', async () => {
+    it('should successfully cancel booking and provide full refund if outside 48 hours', async () => {
       // Mock check-in 5 days from now
       const checkInDate = new Date();
       checkInDate.setDate(checkInDate.getDate() + 5);
@@ -186,15 +254,23 @@ describe('BookingsService', () => {
         id: '1',
         userId: 'user1',
         checkInDate: checkInDate.toISOString().split('T')[0],
+        totalPrice: 100,
+        paymentStatus: 'paid',
+        stripePaymentIntentId: 'pi_test',
       } as unknown as Booking;
 
       jest.spyOn(service, 'findById').mockResolvedValue(booking);
 
       await service.cancelBooking('1', 'user1');
 
-      expect(bookingRepository.update).toHaveBeenCalledWith('1', {
-        bookingStatus: 'cancelled',
-      });
+      expect(bookingRepository.update).toHaveBeenCalledWith(
+        '1',
+        expect.objectContaining({
+          bookingStatus: 'cancelled',
+          paymentStatus: 'refunded',
+          refundedAmount: 100,
+        }),
+      );
     });
   });
 });
