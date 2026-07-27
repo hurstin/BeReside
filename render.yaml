@@ -13,7 +13,7 @@ services:
   - type: web
     name: bereside-api
     env: docker
-    dockerfilePath: ./backend/Dockerfile
+    rootDir: backend
     plan: free
     envVars:
       # Database connection (automatically populated from the DB above)
@@ -62,7 +62,7 @@ services:
   - type: web
     name: bereside-frontend
     env: docker
-    dockerfilePath: ./frontend/Dockerfile
+    rootDir: frontend
     plan: free
     envVars:
       # Link the frontend to the backend's URL dynamically
