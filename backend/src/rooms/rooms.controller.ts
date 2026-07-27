@@ -17,12 +17,14 @@ import { UpdateRoomDto } from './dto/update-room.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('Rooms')
 @Controller('rooms')
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 
+  @Public()
   @Get()
   @ApiOperation({
     summary: 'Get all rooms',
@@ -37,6 +39,7 @@ export class RoomsController {
     return this.roomsService.findAll(checkIn, checkOut, status);
   }
 
+  @Public()
   @Get(':id')
   @ApiOperation({
     summary: 'Get room by ID',

@@ -78,13 +78,18 @@ describe('BookingsController', () => {
       const booking = { id: '1', bookingStatus: 'checked-in' } as Booking;
       bookingsService.updateStatus?.mockResolvedValue(booking);
 
-      const result = await controller.updateStatus('1', {
-        status: 'checked-in',
-      });
+      const result = await controller.updateStatus(
+        '1',
+        {
+          status: 'checked-in',
+        },
+        { user: { sub: '123' } },
+      );
       expect(result).toEqual(booking);
       expect(bookingsService.updateStatus).toHaveBeenCalledWith(
         '1',
         'checked-in',
+        '123',
       );
     });
   });

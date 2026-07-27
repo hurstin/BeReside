@@ -13,6 +13,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { StripeModule } from './stripe/stripe.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AdminModule } from './admin/admin.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { AdminModule } from './admin/admin.module';
     StripeModule,
     PaymentsModule,
     AdminModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [

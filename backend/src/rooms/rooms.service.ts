@@ -59,18 +59,24 @@ export class RoomsService {
     const processedRooms: Room[] = [];
 
     for (const room of rooms) {
-      const activeBookingCount = await this.bookingRepository
+      const activeBooking = await this.bookingRepository
         .createQueryBuilder('booking')
+        .leftJoinAndSelect('booking.user', 'user')
         .where('booking.room_id = :roomId', { roomId: room.id })
-        .andWhere('booking.booking_status = :status', { status: 'confirmed' })
+        .andWhere('booking.booking_status IN (:...statuses)', {
+          statuses: ['confirmed', 'checked-in', 'pending'],
+        })
         .andWhere('booking.check_in_date <= :today', { today: todayStr })
         .andWhere('booking.check_out_date > :today', { today: todayStr })
-        .getCount();
+        .getOne();
 
-      if (activeBookingCount > 0) {
-        if (room.status === 'available') {
+      if (activeBooking) {
+        if (activeBooking.bookingStatus === 'checked-in') {
+          room.status = 'occupied';
+        } else {
           room.status = 'booked';
         }
+        Object.assign(room, { currentBooking: activeBooking });
       } else {
         if (room.status === 'booked' || room.status === 'occupied') {
           room.status = 'available';
@@ -79,8 +85,11 @@ export class RoomsService {
 
       const upcomingBookings = await this.bookingRepository
         .createQueryBuilder('booking')
+        .leftJoinAndSelect('booking.user', 'user')
         .where('booking.room_id = :roomId', { roomId: room.id })
-        .andWhere('booking.booking_status = :status', { status: 'confirmed' })
+        .andWhere('booking.booking_status IN (:...statuses)', {
+          statuses: ['confirmed', 'checked-in', 'pending'],
+        })
         .andWhere('booking.check_in_date > :today', { today: todayStr })
         .select(['booking.checkInDate', 'booking.checkOutDate'])
         .orderBy('booking.checkInDate', 'ASC')

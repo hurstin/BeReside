@@ -3,16 +3,20 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Lock, CreditCard, ChevronLeft } from "lucide-react";
-import { Room } from "@/types";
+import { Lock, CreditCard, ChevronLeft, AlertCircle } from "lucide-react";
+import { apiFetch } from "@/lib/api";
+import { UIRoom } from "../rooms/[id]/page";
 
-// Mock data (we would normally fetch this based on roomId)
-const mockRooms: Room[] = [
-  { id: '1', name: 'Family Room', pricePerNight: 450, type: 'family', maxOccupancy: 4, description: '', amenities: [] },
-  { id: '2', name: 'Double Room', pricePerNight: 350, type: 'double', maxOccupancy: 2, description: '', amenities: [] },
-  { id: '3', name: 'Queen Room', pricePerNight: 320, type: 'double', maxOccupancy: 2, description: '', amenities: [] },
-  { id: '4', name: 'Apartment', pricePerNight: 500, type: 'apartment', maxOccupancy: 4, description: '', amenities: [] }
-];
+// We'll reuse the mapping logic by copying it for simplicity
+function mapBackendRoomToUI(backendRoom: any): UIRoom {
+  const t = backendRoom.type.toLowerCase();
+  let name = `Room ${backendRoom.roomNumber}`;
+  let pricePerNight = Number(backendRoom.basePricePerNight);
+  if (t === 'family') name = `Family Room - ${backendRoom.roomNumber}`;
+  else if (t === 'double') name = `Double Room - ${backendRoom.roomNumber}`;
+  else if (t === 'apartment') name = `Apartment - ${backendRoom.roomNumber}`;
+  return { ...backendRoom, name, pricePerNight };
+}
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
@@ -23,18 +27,53 @@ function CheckoutContent() {
   const checkOut = searchParams.get('checkOut');
   const guests = searchParams.get('guests');
 
+  const [room, setRoom] = useState<UIRoom | null>(null);
+  const [isLoadingRoom, setIsLoadingRoom] = useState(true);
+
+  const [guestFirstName, setGuestFirstName] = useState('');
+  const [guestLastName, setGuestLastName] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
+
   const [isProcessing, setIsProcessing] = useState(false);
-  
-  const room = mockRooms.find(r => r.id === roomId);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // If invalid params, redirect back to home
-    if (!roomId || !checkIn || !checkOut || !room) {
+    if (!roomId || !checkIn || !checkOut) {
       router.push('/');
+      return;
     }
-  }, [roomId, checkIn, checkOut, room, router]);
+    const fetchRoom = async () => {
+      try {
+        const data = await apiFetch<any>(`/rooms/${roomId}`);
+        setRoom(mapBackendRoomToUI(data));
+      } catch (err: any) {
+        setError("Room not found");
+      } finally {
+        setIsLoadingRoom(false);
+      }
+    };
+    fetchRoom();
+  }, [roomId, checkIn, checkOut, router]);
 
-  if (!room || !checkIn || !checkOut) return null;
+  if (isLoadingRoom) {
+    return (
+      <div className="min-h-screen bg-linen flex items-center justify-center pt-32 text-forest">
+        <div className="w-8 h-8 border-2 border-forest border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !room || !checkIn || !checkOut) {
+    return (
+      <div className="min-h-screen bg-linen flex items-center justify-center pt-32">
+        <div className="text-center text-forest">
+          <h1 className="font-display text-4xl mb-4">Cannot proceed with checkout</h1>
+          <p>{error || "Missing booking details."}</p>
+        </div>
+      </div>
+    );
+  }
 
   // Calculate pricing
   const start = new Date(checkIn);
@@ -45,19 +84,40 @@ function CheckoutContent() {
   const taxes = Math.round(subtotal * 0.1);
   const grandTotal = subtotal + taxes;
 
-  const handlePayment = (e: React.FormEvent) => {
+  const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
-    // Simulate Stripe payment processing
-    setTimeout(() => {
+    setError(null);
+    
+    try {
+      const response = await apiFetch<{ booking: { id: string }, url: string | null }>('/public/bookings', {
+        method: 'POST',
+        body: JSON.stringify({
+          roomId: room.id,
+          checkInDate: checkIn,
+          checkOutDate: checkOut,
+          guestEmail,
+          guestFirstName,
+          guestLastName,
+          guestPhone
+        }),
+      });
+
+      if (response.url) {
+        // Redirect to Stripe checkout session
+        window.location.href = response.url;
+      } else {
+        // Fallback if no stripe session (e.g. 0 amount)
+        router.push(`/booking-confirmation?bookingRef=${response.booking.id}`);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to process booking');
       setIsProcessing(false);
-      // Redirect to confirmation
-      router.push(`/booking-confirmation?bookingRef=BK-${Math.floor(1000 + Math.random() * 9000)}`);
-    }, 2000);
+    }
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-8 md:px-16 mt-32 mb-24 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-16">
+    <div className="max-w-6xl mx-auto px-6 md:px-16 mt-24 md:mt-32 mb-16 md:mb-24 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12 md:gap-16">
       {/* Left Column: Form */}
       <div>
         <Link href={`/rooms/${roomId}`} className="inline-flex items-center text-gold text-xs font-medium uppercase tracking-[0.2em] mb-8 hover:text-forest transition-colors">
@@ -68,26 +128,55 @@ function CheckoutContent() {
         <h1 className="font-display text-[40px] text-forest leading-none mb-10">Complete your booking</h1>
 
         <form onSubmit={handlePayment} className="space-y-12">
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/50 p-4 rounded-none flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+              <p className="text-sm text-red-700 font-medium">{error}</p>
+            </div>
+          )}
+
           {/* Guest Details */}
           <section>
             <h2 className="font-display text-[24px] text-forest mb-6 border-b border-sand pb-4">Guest Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-[10px] font-medium text-stone uppercase tracking-[0.15em] mb-2">First Name</label>
-                <input required className="w-full bg-cream border border-sand rounded-none p-3.5 text-forest focus:outline-none focus:border-olive focus:ring-1 focus:ring-olive transition-colors font-body" />
+                <input 
+                  required 
+                  value={guestFirstName}
+                  onChange={(e) => setGuestFirstName(e.target.value)}
+                  className="w-full bg-cream border border-sand rounded-none p-3.5 text-forest focus:outline-none focus:border-olive focus:ring-1 focus:ring-olive transition-colors font-body" 
+                />
               </div>
               <div>
                 <label className="block text-[10px] font-medium text-stone uppercase tracking-[0.15em] mb-2">Last Name</label>
-                <input required className="w-full bg-cream border border-sand rounded-none p-3.5 text-forest focus:outline-none focus:border-olive focus:ring-1 focus:ring-olive transition-colors font-body" />
+                <input 
+                  required 
+                  value={guestLastName}
+                  onChange={(e) => setGuestLastName(e.target.value)}
+                  className="w-full bg-cream border border-sand rounded-none p-3.5 text-forest focus:outline-none focus:border-olive focus:ring-1 focus:ring-olive transition-colors font-body" 
+                />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-[10px] font-medium text-stone uppercase tracking-[0.15em] mb-2">Email Address</label>
-                <input required type="email" className="w-full bg-cream border border-sand rounded-none p-3.5 text-forest focus:outline-none focus:border-olive focus:ring-1 focus:ring-olive transition-colors font-body" />
+                <input 
+                  required 
+                  type="email" 
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                  className="w-full bg-cream border border-sand rounded-none p-3.5 text-forest focus:outline-none focus:border-olive focus:ring-1 focus:ring-olive transition-colors font-body" 
+                />
                 <p className="text-[11px] text-stone mt-2">Your booking confirmation will be sent here.</p>
               </div>
               <div className="md:col-span-2">
                 <label className="block text-[10px] font-medium text-stone uppercase tracking-[0.15em] mb-2">Phone Number</label>
-                <input required type="tel" className="w-full bg-cream border border-sand rounded-none p-3.5 text-forest focus:outline-none focus:border-olive focus:ring-1 focus:ring-olive transition-colors font-body" />
+                <input 
+                  required 
+                  type="tel" 
+                  value={guestPhone}
+                  onChange={(e) => setGuestPhone(e.target.value)}
+                  className="w-full bg-cream border border-sand rounded-none p-3.5 text-forest focus:outline-none focus:border-olive focus:ring-1 focus:ring-olive transition-colors font-body" 
+                />
               </div>
             </div>
           </section>
@@ -98,38 +187,9 @@ function CheckoutContent() {
               Payment Method
               <Lock className="w-4 h-4 text-stone" />
             </h2>
-            <div className="bg-cream border border-sand p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <input type="radio" id="card" name="payment" defaultChecked className="text-olive focus:ring-olive accent-olive" />
-                <label htmlFor="card" className="text-sm font-medium text-forest flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-stone" />
-                  Credit or Debit Card
-                </label>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-[10px] font-medium text-stone uppercase tracking-[0.15em] mb-2">Card Number</label>
-                  <div className="relative">
-                    <input required type="text" placeholder="0000 0000 0000 0000" maxLength={19} className="w-full bg-white border border-sand rounded-none p-3.5 text-forest focus:outline-none focus:border-olive focus:ring-1 focus:ring-olive transition-colors font-body font-mono text-sm tracking-widest" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-medium text-stone uppercase tracking-[0.15em] mb-2">Expiration</label>
-                    <input required type="text" placeholder="MM/YY" maxLength={5} className="w-full bg-white border border-sand rounded-none p-3.5 text-forest focus:outline-none focus:border-olive focus:ring-1 focus:ring-olive transition-colors font-body font-mono text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-medium text-stone uppercase tracking-[0.15em] mb-2">CVC</label>
-                    <input required type="text" placeholder="123" maxLength={4} className="w-full bg-white border border-sand rounded-none p-3.5 text-forest focus:outline-none focus:border-olive focus:ring-1 focus:ring-olive transition-colors font-body font-mono text-sm" />
-                  </div>
-                </div>
-              </div>
+            <div className="bg-cream border border-sand p-6 text-sm text-stone">
+              <p>You will be securely redirected to Stripe to complete your payment.</p>
             </div>
-            <p className="text-[11px] text-stone mt-4 flex items-center gap-1.5">
-              <Lock className="w-3 h-3" />
-              Payments are securely processed by Stripe. Your card details are never stored on our servers.
-            </p>
           </section>
 
           <button 
@@ -140,10 +200,10 @@ function CheckoutContent() {
             {isProcessing ? (
               <span className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Processing Payment...
+                Connecting to Secure Payment...
               </span>
             ) : (
-              `Pay $${grandTotal}`
+              `Proceed to Payment ($${grandTotal})`
             )}
           </button>
         </form>
@@ -151,7 +211,7 @@ function CheckoutContent() {
 
       {/* Right Column: Order Summary */}
       <div>
-        <div className="sticky top-32 bg-forest text-cream p-8 rounded-none">
+        <div className="sticky top-24 md:top-32 bg-forest text-cream p-6 md:p-8 rounded-none">
           <h3 className="font-display text-[24px] mb-8 border-b border-white/10 pb-4">Reservation Summary</h3>
           
           <div className="mb-8">

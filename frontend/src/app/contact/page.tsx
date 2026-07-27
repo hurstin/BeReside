@@ -4,7 +4,7 @@ export default function ContactPage() {
   return (
     <main className="min-h-screen bg-cream">
       {/* Hero */}
-      <div className="bg-forest pt-[224px] pb-20 px-16 relative overflow-hidden">
+      <div className="bg-forest pt-[140px] md:pt-[224px] pb-12 md:pb-20 px-6 md:px-16 relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: "url('/pattern-page.svg')" }}></div>
         <p className="text-[10px] tracking-[0.22em] text-gold uppercase mb-4 relative">
           Contact Us
@@ -19,12 +19,12 @@ export default function ContactPage() {
       </div>
 
       {/* Form Section */}
-      <div className="bg-cream px-16 py-24 max-w-[1000px] mx-auto">
+      <div className="bg-cream px-6 md:px-16 py-16 md:py-24 max-w-[1000px] mx-auto">
         <h2 className="font-display text-[52px] font-normal text-forest mb-14">
           Send a <em className="italic text-amber">message</em>
         </h2>
         <form>
-          <div className="grid grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] tracking-[0.12em] text-stone uppercase">Your Name</label>
               <input type="text" className="bg-transparent border-b border-sand py-3 text-[15px] text-charcoal font-body font-light outline-none transition-colors duration-200 focus:border-amber placeholder:text-sand" placeholder="John Doe" />
@@ -35,7 +35,7 @@ export default function ContactPage() {
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] tracking-[0.12em] text-stone uppercase">Phone Number</label>
               <input type="text" className="bg-transparent border-b border-sand py-3 text-[15px] text-charcoal font-body font-light outline-none transition-colors duration-200 focus:border-amber placeholder:text-sand" placeholder="+1 234 567 890" />

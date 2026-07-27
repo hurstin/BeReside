@@ -16,10 +16,11 @@ export class BookingsTasksService {
     private readonly roomRepository: Repository<Room>,
   ) {}
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_HOUR)
   async handleCron() {
     this.logger.debug('Running scheduled booking & room status jobs...');
     await this.cancelExpiredBookings();
+    await this.cancelNoShowBookings();
     await this.updateRoomStatuses();
   }
 
@@ -45,6 +46,29 @@ export class BookingsTasksService {
         this.logger.log(
           `Booking ${booking.id} cancelled due to payment timeout.`,
         );
+      }
+    }
+  }
+
+  private async cancelNoShowBookings() {
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const noShowBookings = await this.bookingRepository.find({
+      where: {
+        bookingStatus: 'confirmed',
+        checkOutDate: LessThan(todayStr),
+      },
+    });
+
+    if (noShowBookings.length > 0) {
+      this.logger.log(
+        `Found ${noShowBookings.length} no-show bookings. Cancelling them...`,
+      );
+      for (const booking of noShowBookings) {
+        booking.bookingStatus = 'cancelled';
+        booking.isNoShow = true;
+        await this.bookingRepository.save(booking);
+        this.logger.log(`Booking ${booking.id} cancelled as no-show.`);
       }
     }
   }

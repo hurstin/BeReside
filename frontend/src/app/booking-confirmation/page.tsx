@@ -16,7 +16,7 @@ function ConfirmationContent() {
   }, [searchParams]);
 
   return (
-    <div className="bg-cream border border-sand p-10 md:p-16 max-w-2xl mx-auto shadow-sm relative overflow-hidden">
+    <div className="bg-cream border border-sand p-6 sm:p-10 md:p-16 max-w-2xl mx-auto shadow-sm relative overflow-hidden">
       {/* Decorative element */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-bl-full -z-0"></div>
 

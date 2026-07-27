@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export default function AboutStrip() {
   return (
-    <div className="grid grid-cols-2 gap-0 min-h-[560px]">
-      <div className="relative overflow-hidden bg-forest">
-        <div className="w-full h-full min-h-[480px] bg-gradient-to-br from-[#1a2212] via-[#2D3720] to-[#4a5c2a] flex items-center justify-center">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:min-h-[560px]">
+      <div className="relative overflow-hidden bg-forest h-64 md:h-auto">
+        <div className="w-full h-full min-h-full md:min-h-[480px] bg-gradient-to-br from-[#1a2212] via-[#2D3720] to-[#4a5c2a] flex items-center justify-center">
           <div className="text-center">
             <span className="font-display text-[120px] text-white/5 leading-none block">
               ❧
@@ -12,7 +12,7 @@ export default function AboutStrip() {
           </div>
         </div>
       </div>
-      <div className="py-20 px-[72px] flex flex-col justify-center bg-linen">
+      <div className="py-12 px-6 md:py-20 md:px-[72px] flex flex-col justify-center bg-linen">
         <p className="text-[10px] tracking-[0.22em] text-amber font-medium mb-4 uppercase">
           Our Story
         </p>

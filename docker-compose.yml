@@ -1,64 +1,72 @@
 
 services:
-#   postgres:
-#     image: postgres:16-alpine
-#     container_name: bereside-postgres
-#     restart: always
-#     ports:
-#       - "${DB_PORT:-5432}:5432"
-#     environment:
-#       POSTGRES_USER: ${DB_USER:-bereside_admin}
-#       POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
-#       POSTGRES_DB: ${DB_NAME:-bereside_booking_db}
-#     volumes:
-#       - postgres_data:/var/lib/postgresql/data
-#       - ./backend/postgres-init:/docker-entrypoint-initdb.d
-#     networks:
-#       - bereside-network
-#     healthcheck:
-#       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-bereside_admin} -d $${POSTGRES_DB:-bereside_booking_db}"]
-#       interval: 5s
-#       timeout: 5s
-#       retries: 5
-# 
-#   api:
-#     build:
-#       context: ./backend
-#       dockerfile: Dockerfile
-#       target: builder
-#     command: npm run start:dev
-#     container_name: bereside-api
-#     restart: always
-#     ports:
-#       - "${PORT:-3000}:3000"
-#     environment:
-#       PORT: ${PORT:-3000}
-#       DB_HOST: postgres
-#       DB_PORT: 5432
-#       DB_USER: ${DB_USER:-bereside_admin}
-#       DB_PASSWORD: ${DB_PASSWORD:-password}
-#       DB_NAME: ${DB_NAME:-bereside_booking_db}
-#       DATABASE_URL: postgresql://${DB_USER:-bereside_admin}:${DB_PASSWORD:-password}@postgres:5432/${DB_NAME:-bereside_booking_db}?schema=public
-#       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-#       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
-#     networks:
-#       - bereside-network
-#     depends_on:
-#       postgres:
-#         condition: service_healthy
-#     develop:
-#       watch:
-#         - action: sync
-#           path: ./backend/src
-#           target: /usr/src/app/src
-#         - action: rebuild
-#           path: ./backend/package.json
+  postgres:
+    image: postgres:16-alpine
+    container_name: bereside-postgres
+    restart: always
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER:-bereside_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-bereside_booking_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - bereside-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-bereside_admin} -d $${POSTGRES_DB:-bereside_booking_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: builder
+    command: npm run start:dev
+    container_name: bereside-api
+    restart: always
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      PORT: ${PORT:-3000}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-bereside_admin}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_NAME: ${DB_NAME:-bereside_booking_db}
+      DATABASE_URL: postgresql://${DB_USER:-bereside_admin}:${DB_PASSWORD:-password}@postgres:5432/${DB_NAME:-bereside_booking_db}?schema=public
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT}
+      EMAIL_USERNAME: ${EMAIL_USERNAME}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+    networks:
+      - bereside-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    develop:
+      watch:
+        - action: sync
+          path: ./backend/src
+          target: /usr/src/app/src
+        - action: rebuild
+          path: ./backend/package.json
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      target: runner
+      target: builder
+    command: npm run dev
     container_name: bereside-frontend
     restart: always
     ports:
@@ -67,6 +75,10 @@ services:
       PORT: 3000
     networks:
       - bereside-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
     develop:
       watch:
         - action: sync

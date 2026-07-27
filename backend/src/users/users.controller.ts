@@ -5,11 +5,15 @@ import {
   Body,
   Request,
   Param,
-  Delete,
   UseGuards,
+  Post,
+  Query,
+  Delete,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { UsersService } from './users.service';
+import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
@@ -71,14 +75,37 @@ export class UsersController {
   }
 
   @Get()
-  @Roles('admin', 'staff')
+  @Roles('admin')
   @ApiOperation({
     summary: 'Get all users',
     description:
-      'Retrieves a list of all users registered in the system. Requires Admin or Staff privileges.',
+      'Retrieves a list of all users registered in the system. Requires Admin privileges.',
   })
-  async findAll() {
-    return this.usersService.findAll();
+  async findAll(
+    @Query('role') role?: string,
+    @Query('includeDeleted') includeDeleted?: string,
+  ) {
+    const withDeleted = includeDeleted === 'true';
+    return this.usersService.findAll(role, withDeleted);
+  }
+
+  @Post()
+  @Roles('admin')
+  @ApiOperation({
+    summary: 'Create a new user',
+    description:
+      'Allows an administrator to create a new user with a specific role.',
+  })
+  async create(@Body() createUserDto: CreateUserDto) {
+    const { password, ...rest } = createUserDto;
+    const passwordHash = await bcrypt.hash(
+      password || 'defaultPassword123!',
+      10,
+    );
+    return this.usersService.create({
+      ...rest,
+      passwordHash,
+    });
   }
 
   @Get(':id')
@@ -116,5 +143,17 @@ export class UsersController {
   async remove(@Param('id') id: string) {
     await this.usersService.remove(id);
     return { message: 'User successfully removed' };
+  }
+
+  @Patch(':id/restore')
+  @Roles('admin')
+  @ApiOperation({
+    summary: 'Restore a deleted user',
+    description:
+      'Restores a soft-deleted user (e.g., granting access back to a revoked staff member). Requires Admin privileges.',
+  })
+  async restore(@Param('id') id: string) {
+    await this.usersService.restore(id);
+    return { message: 'User successfully restored' };
   }
 }

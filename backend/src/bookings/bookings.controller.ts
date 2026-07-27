@@ -11,6 +11,7 @@ import {
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { CreateWalkInBookingDto } from './dto/create-walkin-booking.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -45,6 +46,24 @@ export class BookingsController {
     return this.bookingsService.createBooking(userId, createBookingDto);
   }
 
+  @Post('walk-in')
+  @Roles('admin', 'staff')
+  @ApiOperation({
+    summary: 'Create a walk-in booking',
+    description:
+      'Allows admin/staff to directly book a room for a walk-in guest without Stripe checkout. Assumes physical payment.',
+  })
+  async createWalkIn(
+    @Request() req: AuthenticatedRequest,
+    @Body() createWalkInBookingDto: CreateWalkInBookingDto,
+  ): Promise<Booking> {
+    const staffId = String(req.user?.sub || req.user?.id);
+    return this.bookingsService.createWalkInBooking(
+      staffId,
+      createWalkInBookingDto,
+    );
+  }
+
   @Get('my-reservations')
   @ApiOperation({
     summary: 'Get my reservations',
@@ -56,6 +75,19 @@ export class BookingsController {
   ): Promise<Booking[]> {
     const userId = String(req.user?.sub || req.user?.id);
     return this.bookingsService.getUserBookings(userId);
+  }
+
+  @Post('verify-checkin')
+  @Roles('admin', 'staff')
+  @ApiOperation({
+    summary: 'Verify check-in PIN',
+    description:
+      'Verifies a check-in PIN and Reference ID. Returns the booking if valid.',
+  })
+  async verifyCheckIn(
+    @Body() body: { referenceId: string; pin: string },
+  ): Promise<{ booking: Booking; isTooEarly: boolean; message?: string }> {
+    return this.bookingsService.verifyCheckIn(body.referenceId, body.pin);
   }
 
   @Get()
@@ -90,8 +122,14 @@ export class BookingsController {
   async updateStatus(
     @Param('id') id: string,
     @Body() updateBookingStatusDto: UpdateBookingStatusDto,
+    @Request() req: AuthenticatedRequest,
   ): Promise<Booking> {
-    return this.bookingsService.updateStatus(id, updateBookingStatusDto.status);
+    const staffId = String(req.user?.sub || req.user?.id);
+    return this.bookingsService.updateStatus(
+      id,
+      updateBookingStatusDto.status,
+      staffId,
+    );
   }
 
   @Post(':id/cancel')

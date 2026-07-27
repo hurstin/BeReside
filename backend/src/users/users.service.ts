@@ -55,10 +55,30 @@ export class UsersService {
     await this.usersRepository.update(id, { passwordHash: newHash });
   }
 
-  async findAll(): Promise<User[]> {
-    return this.usersRepository.find({
-      order: { createdAt: 'DESC' },
+  async findAll(role?: string, withDeleted: boolean = false): Promise<User[]> {
+    const queryBuilder = this.usersRepository
+      .createQueryBuilder('user')
+      .orderBy('user.createdAt', 'DESC');
+
+    if (withDeleted) {
+      queryBuilder.withDeleted();
+    }
+
+    if (role) {
+      queryBuilder.where('user.role = :role', { role });
+    }
+
+    return queryBuilder.getMany();
+  }
+
+  async restore(id: string): Promise<void> {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      withDeleted: true,
     });
+    if (!user) throw new NotFoundException('User not found');
+
+    await this.usersRepository.restore(id);
   }
 
   async remove(id: string): Promise<void> {

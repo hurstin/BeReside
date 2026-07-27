@@ -17,6 +17,7 @@ describe('UsersService', () => {
     save: jest.Mock;
     update: jest.Mock;
     softRemove: jest.Mock;
+    createQueryBuilder: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -27,6 +28,7 @@ describe('UsersService', () => {
       save: jest.fn(),
       update: jest.fn(),
       softRemove: jest.fn(),
+      createQueryBuilder: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -49,12 +51,19 @@ describe('UsersService', () => {
   describe('findAll', () => {
     it('should return an array of users', async () => {
       const users = [{ id: '1', email: 'test@example.com' }] as User[];
-      userRepository.find?.mockResolvedValue(users);
+      const queryBuilder: Record<string, jest.Mock> = {
+        orderBy: jest.fn().mockReturnThis(),
+        withDeleted: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue(users),
+      };
+      userRepository.createQueryBuilder?.mockReturnValue(queryBuilder);
 
       const result = await service.findAll();
-      expect(userRepository.find).toHaveBeenCalledWith({
-        order: { createdAt: 'DESC' },
-      });
+      expect(userRepository.createQueryBuilder).toHaveBeenCalledWith('user');
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith(
+        'user.createdAt',
+        'DESC',
+      );
       expect(result).toEqual(users);
     });
   });

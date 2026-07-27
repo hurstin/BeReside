@@ -29,7 +29,7 @@ function MenuCategory({ label, title, items, noMarginBottom }: MenuCategoryProps
       </div>
       <div className="w-12 h-[1px] bg-amber mb-7"></div>
       
-      <div className="grid grid-cols-2 gap-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-16">
         <div>
           {col1.map((item, i) => (
             <div key={i} className="flex justify-between items-start py-4 border-b border-white/5 gap-4">
@@ -86,7 +86,7 @@ export default function RestaurantPage() {
   return (
     <main className="min-h-screen bg-forest">
       {/* Hero */}
-      <div className="bg-forest pt-[224px] pb-20 px-16 relative overflow-hidden">
+      <div className="bg-forest pt-[140px] md:pt-[224px] pb-12 md:pb-20 px-6 md:px-16 relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: "url('/pattern-page.svg')" }}></div>
         <p className="text-[10px] tracking-[0.22em] text-gold uppercase mb-4 relative">
           Fine Dining
@@ -101,7 +101,7 @@ export default function RestaurantPage() {
       </div>
 
       {/* Menu Sections */}
-      <div className="bg-forest px-16 py-24">
+      <div className="bg-forest px-6 md:px-16 py-16 md:py-24">
         <MenuCategory label="To begin" title="Starters" items={starters} />
         <MenuCategory label="The main event" title="Main Course" items={mains} />
         <MenuCategory label="Sweet endings" title="Desserts" items={desserts} noMarginBottom />

@@ -1,25 +1,97 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Camera, User, Mail, Shield, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Camera, User, Mail, Shield, Save, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Label } from '@/components/ui/Label';
+import { apiFetch } from '@/lib/api';
+
+interface UserProfile {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+}
 
 export default function ProfilePage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await apiFetch<UserProfile>('/users/me');
+        setProfile(data);
+        setFirstName(data.firstName);
+        setLastName(data.lastName);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load profile');
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSaving(true);
     setIsSuccess(false);
-    setTimeout(() => {
-      setIsLoading(false);
+    setError(null);
+
+    try {
+      // Update basic info
+      await apiFetch('/users/me', {
+        method: 'PATCH',
+        body: JSON.stringify({ firstName, lastName }),
+      });
+
+      // Update password if provided
+      if (newPassword || currentPassword) {
+        if (newPassword !== confirmPassword) {
+          throw new Error('New passwords do not match');
+        }
+        if (!currentPassword) {
+          throw new Error('Current password is required to set a new password');
+        }
+        await apiFetch('/users/me/password', {
+          method: 'PATCH',
+          body: JSON.stringify({ oldPassword: currentPassword, newPassword }),
+        });
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+
       setIsSuccess(true);
       setTimeout(() => setIsSuccess(false), 3000);
-    }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoadingProfile) {
+    return (
+      <div className="flex items-center justify-center min-h-[500px]">
+        <div className="w-8 h-8 border-2 border-zinc-500 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -27,6 +99,13 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-bold tracking-tight text-white">Profile Settings</h1>
         <p className="text-zinc-400 mt-2">Manage your personal information and staff preferences.</p>
       </div>
+
+      {error && (
+        <div className="mb-8 bg-red-500/10 border border-red-500/50 p-4 rounded-2xl flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+          <p className="text-sm text-red-400">{error}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left Column - Avatar & Role */}
@@ -43,10 +122,10 @@ export default function ProfilePage() {
                 <Camera className="w-4 h-4" />
               </button>
             </div>
-            <h3 className="text-xl font-semibold text-white">Jane Doe</h3>
-            <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-medium">
+            <h3 className="text-xl font-semibold text-white">{profile?.firstName} {profile?.lastName}</h3>
+            <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-medium uppercase tracking-wider">
               <Shield className="w-3.5 h-3.5" />
-              Admin
+              {profile?.role}
             </div>
           </div>
         </div>
@@ -60,20 +139,33 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" defaultValue="Jane" />
+                    <Input 
+                      id="firstName" 
+                      value={firstName} 
+                      onChange={(e) => setFirstName(e.target.value)} 
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" defaultValue="Doe" />
+                    <Input 
+                      id="lastName" 
+                      value={lastName} 
+                      onChange={(e) => setLastName(e.target.value)} 
+                      required
+                    />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="email">Email Address</Label>
                     <Input 
                       id="email" 
                       type="email" 
-                      defaultValue="jane.doe@bereside.com"
+                      value={profile?.email || ''}
+                      disabled
+                      className="opacity-50 cursor-not-allowed"
                       icon={<Mail className="w-4 h-4" />}
                     />
+                    <p className="text-xs text-zinc-500 mt-1">Email cannot be changed.</p>
                   </div>
                 </div>
               </div>
@@ -83,16 +175,31 @@ export default function ProfilePage() {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input id="currentPassword" type="password" />
+                    <Input 
+                      id="currentPassword" 
+                      type="password" 
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="newPassword">New Password</Label>
-                      <Input id="newPassword" type="password" />
+                      <Input 
+                        id="newPassword" 
+                        type="password" 
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
-                      <Input id="confirmNewPassword" type="password" />
+                      <Input 
+                        id="confirmNewPassword" 
+                        type="password" 
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -105,8 +212,8 @@ export default function ProfilePage() {
                   Changes saved successfully
                 </span>
               )}
-              <Button type="submit" isLoading={isLoading} className="min-w-[140px]">
-                {!isLoading && <Save className="w-4 h-4 mr-2" />}
+              <Button type="submit" isLoading={isSaving} className="min-w-[140px]">
+                {!isSaving && <Save className="w-4 h-4 mr-2" />}
                 Save Changes
               </Button>
             </div>

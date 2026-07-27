@@ -3,10 +3,11 @@ import React, { forwardRef } from 'react';
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   icon?: React.ReactNode;
+  endIcon?: React.ReactNode;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, error, icon, ...props }, ref) => {
+  ({ className, type, error, icon, endIcon, ...props }, ref) => {
     return (
       <div className="w-full relative flex flex-col">
         <div className="relative">
@@ -22,12 +23,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:border-zinc-500
               disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200
               ${icon ? 'pl-10' : ''}
+              ${endIcon ? 'pr-10' : ''}
               ${error ? 'border-red-500/50 focus:ring-red-500 focus:border-red-500' : 'border-zinc-800'}
+              ${type === 'date' || type === 'time' || type === 'datetime-local' ? '[color-scheme:dark]' : ''}
               ${className || ''}
             `}
             ref={ref}
             {...props}
           />
+          {endIcon && (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-zinc-400">
+              {endIcon}
+            </div>
+          )}
         </div>
         {error && (
           <p className="mt-1.5 text-sm text-red-400">
