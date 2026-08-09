@@ -5,9 +5,11 @@ import { Booking } from '../bookings/booking.entity';
 @Injectable()
 export class MailService {
   private transporter: nodemailer.Transporter;
+  private readonly defaultFrom: string;
   private readonly logger = new Logger(MailService.name);
 
   constructor() {
+    this.defaultFrom = process.env.EMAIL_FROM_ADDRESS || '"BeReside Booking" <noreply@bereside.com>';
     this.transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: parseInt(process.env.EMAIL_PORT || '2525', 10),
@@ -44,7 +46,7 @@ export class MailService {
     const resetUrl = `http://localhost:3001/admin/reset-password?token=${token}`;
 
     const mailOptions = {
-      from: '"BeReside Booking" <noreply@bereside.com>',
+      from: this.defaultFrom,
       to,
       subject: 'Password Reset Request',
       html: this.getEmailTemplate(
@@ -84,7 +86,7 @@ export class MailService {
       : '';
 
     const mailOptions = {
-      from: '"BeReside Booking" <noreply@bereside.com>',
+      from: this.defaultFrom,
       to,
       subject: 'Your Booking Receipt & Check-In Details - BeReside',
       html: this.getEmailTemplate(
@@ -140,7 +142,7 @@ export class MailService {
     }
 
     const mailOptions = {
-      from: '"BeReside Booking" <noreply@bereside.com>',
+      from: this.defaultFrom,
       to,
       subject: 'Booking Cancellation & Refund Receipt - BeReside',
       html: this.getEmailTemplate(
@@ -184,7 +186,7 @@ export class MailService {
       : new Date(booking.checkOutDate).toLocaleDateString('en-US');
 
     const mailOptions = {
-      from: '"BeReside" <noreply@bereside.com>',
+      from: this.defaultFrom,
       to,
       subject: 'Your Check-Out Summary & Receipt - BeReside',
       html: this.getEmailTemplate(
@@ -218,7 +220,7 @@ export class MailService {
     const magicLinkUrl = `http://localhost:3001/manage-booking?token=${token}`;
 
     const mailOptions = {
-      from: '"BeReside Booking" <noreply@bereside.com>',
+      from: this.defaultFrom,
       to,
       subject: 'Manage Your Booking - BeReside',
       html: this.getEmailTemplate(
