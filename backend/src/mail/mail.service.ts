@@ -9,7 +9,9 @@ export class MailService {
   private readonly logger = new Logger(MailService.name);
 
   constructor() {
-    this.defaultFrom = process.env.EMAIL_FROM_ADDRESS || '"BeReside Booking" <noreply@bereside.com>';
+    this.defaultFrom =
+      process.env.EMAIL_FROM_ADDRESS ||
+      '"BeReside Booking" <noreply@bereside.com>';
     this.transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: parseInt(process.env.EMAIL_PORT || '2525', 10),
