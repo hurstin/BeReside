@@ -47,6 +47,8 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
+      - key: FRONTEND_URL
+        sync: false
       - key: EMAIL_HOST
         sync: false
       - key: EMAIL_PORT

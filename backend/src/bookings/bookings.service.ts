@@ -106,6 +106,8 @@ export class BookingsService {
     const savedBooking = await this.bookingRepository.save(booking);
 
     // Create Stripe Session
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -121,8 +123,8 @@ export class BookingsService {
         },
       ],
       mode: 'payment',
-      success_url: `http://localhost:3000/booking/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `http://localhost:3000/booking/cancel`,
+      success_url: `${frontendUrl}/booking-confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}/rooms`,
       metadata: { bookingId: savedBooking.id },
     });
 
