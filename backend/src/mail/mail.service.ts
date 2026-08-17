@@ -45,7 +45,8 @@ export class MailService {
   }
 
   async sendPasswordResetEmail(to: string, token: string): Promise<void> {
-    const resetUrl = `http://localhost:3001/admin/reset-password?token=${token}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const resetUrl = `${frontendUrl}/admin/reset-password?token=${token}`;
 
     const mailOptions = {
       from: this.defaultFrom,
@@ -219,7 +220,8 @@ export class MailService {
   }
 
   async sendMagicLink(to: string, token: string): Promise<void> {
-    const magicLinkUrl = `http://localhost:3001/manage-booking?token=${token}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const magicLinkUrl = `${frontendUrl}/manage-booking?token=${token}`;
 
     const mailOptions = {
       from: this.defaultFrom,
