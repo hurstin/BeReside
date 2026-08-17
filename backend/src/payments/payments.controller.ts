@@ -13,9 +13,10 @@ import Stripe from 'stripe';
 import { BookingsService } from '../bookings/bookings.service';
 import { MailService } from '../mail/mail.service';
 import { Public } from '../common/decorators/public.decorator';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags, ApiExcludeController } from '@nestjs/swagger';
 
 @ApiTags('Payments')
+@ApiExcludeController()
 @Controller('payments')
 export class PaymentsController {
   constructor(

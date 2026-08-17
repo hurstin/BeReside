@@ -3,7 +3,9 @@ import { Controller, Get, Res, Query, Inject } from '@nestjs/common';
 import { Response } from 'express';
 import { AppService } from './app.service';
 import { Public } from './common/decorators/public.decorator';
+import { ApiExcludeController } from '@nestjs/swagger';
 
+@ApiExcludeController()
 @Controller()
 export class AppController {
   constructor(

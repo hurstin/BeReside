@@ -7,7 +7,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -22,11 +22,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
-  @ApiOperation({
-    summary: 'Register a new user',
-    description:
-      'Creates a new user account with the provided email, password, and personal details.',
-  })
+  @ApiExcludeEndpoint()
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
     return this.authService.register(createUserDto);
@@ -35,9 +31,9 @@ export class AuthController {
   @Public()
   @UseGuards(LocalAuthGuard)
   @ApiOperation({
-    summary: 'Login and get a JWT token',
+    summary: 'Login for Admins and Staff',
     description:
-      'Authenticates a user via email and password, returning a JWT token payload to be used for authorized endpoints.',
+      'Authenticates an administrative or staff user via email and password, returning a JWT token payload to be used for authorized endpoints.',
   })
   @Post('login')
   @HttpCode(HttpStatus.OK)
