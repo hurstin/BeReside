@@ -107,26 +107,31 @@ export class BookingsService {
 
     // Create Stripe Session
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      
-    const session = await this.stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `BERESIDE - Room ${room.roomNumber}`,
+
+    const session = await this.stripe.checkout.sessions.create(
+      {
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `BERESIDE - Room ${room.roomNumber}`,
+              },
+              unit_amount: Math.round(totalPrice * 100),
             },
-            unit_amount: Math.round(totalPrice * 100),
+            quantity: 1,
           },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: `${frontendUrl}/booking-confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${frontendUrl}/rooms`,
-      metadata: { bookingId: savedBooking.id },
-    });
+        ],
+        mode: 'payment',
+        success_url: `${frontendUrl}/booking-confirmation?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${frontendUrl}/rooms`,
+        metadata: { bookingId: savedBooking.id },
+      },
+      {
+        idempotencyKey: `checkout_${savedBooking.id}`,
+      },
+    );
 
     return { booking: savedBooking, url: session.url };
   }
