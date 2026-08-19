@@ -68,6 +68,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
         this.idempotencyKeyRepository
           .update(idempotencyKey, {
             status: 'completed',
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             responseBody,
             responseStatusCode: response.statusCode,
           })
