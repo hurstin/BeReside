@@ -62,7 +62,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
     }
 
     return next.handle().pipe(
-      tap((responseBody: unknown) => {
+      tap((responseBody: any) => {
         // Save the successful response
         const response = context.switchToHttp().getResponse<Response>();
         this.idempotencyKeyRepository
