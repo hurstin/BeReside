@@ -10,7 +10,12 @@ import {
   Query,
   Delete,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiExcludeController } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiExcludeController,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';

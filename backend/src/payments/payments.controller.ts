@@ -69,7 +69,9 @@ export class PaymentsController {
         // Idempotency check: Ensure we don't process the same webhook twice
         const existingBooking = await this.bookingsService.findById(bookingId);
         if (existingBooking && existingBooking.paymentStatus === 'paid') {
-          console.log(`⚡️ Webhook Idempotency: Booking ${bookingId} is already paid. Skipping.`);
+          console.log(
+            `⚡️ Webhook Idempotency: Booking ${bookingId} is already paid. Skipping.`,
+          );
           return res.status(200).send();
         }
 

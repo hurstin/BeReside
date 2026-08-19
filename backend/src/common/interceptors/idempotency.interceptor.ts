@@ -10,6 +10,7 @@ import { Repository } from 'typeorm';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { IdempotencyKey } from '../entities/idempotency-key.entity';
+import { Request, Response } from 'express';
 
 @Injectable()
 export class IdempotencyInterceptor implements NestInterceptor {
@@ -21,9 +22,12 @@ export class IdempotencyInterceptor implements NestInterceptor {
   async intercept(
     context: ExecutionContext,
     next: CallHandler,
-  ): Promise<Observable<any>> {
-    const request = context.switchToHttp().getRequest();
-    const idempotencyKey = request.headers['idempotency-key'];
+  ): Promise<Observable<unknown>> {
+    const request = context.switchToHttp().getRequest<Request>();
+    const headerValue = request.headers['idempotency-key'];
+    const idempotencyKey = Array.isArray(headerValue)
+      ? headerValue[0]
+      : headerValue;
 
     if (!idempotencyKey) {
       return next.handle();
@@ -36,7 +40,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
     if (record) {
       if (record.status === 'completed') {
         // Return cached response
-        const response = context.switchToHttp().getResponse();
+        const response = context.switchToHttp().getResponse<Response>();
         if (record.responseStatusCode) {
           response.status(record.responseStatusCode);
         }
@@ -58,14 +62,18 @@ export class IdempotencyInterceptor implements NestInterceptor {
     }
 
     return next.handle().pipe(
-      tap(async (responseBody) => {
+      tap((responseBody: unknown) => {
         // Save the successful response
-        const response = context.switchToHttp().getResponse();
-        await this.idempotencyKeyRepository.update(idempotencyKey, {
-          status: 'completed',
-          responseBody,
-          responseStatusCode: response.statusCode,
-        });
+        const response = context.switchToHttp().getResponse<Response>();
+        this.idempotencyKeyRepository
+          .update(idempotencyKey, {
+            status: 'completed',
+            responseBody,
+            responseStatusCode: response.statusCode,
+          })
+          .catch((err: unknown) =>
+            console.error('Failed to update idempotency key:', err),
+          );
       }),
     );
   }

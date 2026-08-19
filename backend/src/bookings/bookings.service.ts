@@ -107,7 +107,7 @@ export class BookingsService {
 
     // Create Stripe Session
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      
+
     const session = await this.stripe.checkout.sessions.create(
       {
         payment_method_types: ['card'],
