@@ -5,12 +5,14 @@ import {
   Body,
   Query,
   BadRequestException,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { BookingsService } from './bookings.service';
 import { CreatePublicBookingDto } from './dto/create-public-booking.dto';
 import { Booking } from './booking.entity';
 import { Public } from '../common/decorators/public.decorator';
+import { IdempotencyInterceptor } from '../common/interceptors/idempotency.interceptor';
 
 @ApiTags('Public Bookings')
 @Controller('public/bookings')
@@ -18,6 +20,7 @@ export class PublicBookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Public()
+  @UseInterceptors(IdempotencyInterceptor)
   @Post()
   @ApiOperation({
     summary: 'Create a new public booking',

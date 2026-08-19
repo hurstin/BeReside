@@ -37,45 +37,44 @@ function CheckoutContent() {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [idempotencyKey, setIdempotencyKey] = useState<string>('');
 
   useEffect(() => {
-    if (!roomId || !checkIn || !checkOut) {
-      router.push('/');
-      return;
-    }
+    setIdempotencyKey(crypto.randomUUID());
+  }, []);
+
+  useEffect(() => {
+    if (!roomId) return;
     const fetchRoom = async () => {
       try {
         const data = await apiFetch<any>(`/rooms/${roomId}`);
         setRoom(mapBackendRoomToUI(data));
-      } catch (err: any) {
-        setError("Room not found");
+      } catch (err) {
+        console.error("Failed to load room for checkout");
       } finally {
         setIsLoadingRoom(false);
       }
     };
     fetchRoom();
-  }, [roomId, checkIn, checkOut, router]);
+  }, [roomId]);
 
-  if (isLoadingRoom) {
+  if (!roomId || !checkIn || !checkOut || !guests) {
     return (
-      <div className="min-h-screen bg-linen flex items-center justify-center pt-32 text-forest">
-        <div className="w-8 h-8 border-2 border-forest border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (error || !room || !checkIn || !checkOut) {
-    return (
-      <div className="min-h-screen bg-linen flex items-center justify-center pt-32">
-        <div className="text-center text-forest">
-          <h1 className="font-display text-4xl mb-4">Cannot proceed with checkout</h1>
-          <p>{error || "Missing booking details."}</p>
+      <div className="min-h-screen bg-linen flex items-center justify-center p-6 text-center">
+        <div>
+          <h1 className="font-display text-[40px] text-forest mb-4">Missing Booking Details</h1>
+          <p className="text-stone mb-8">Please return to the rooms page to select your dates.</p>
+          <Link href="/rooms" className="text-forest underline underline-offset-4 font-medium uppercase tracking-[0.1em] text-[13px]">
+            View Rooms
+          </Link>
         </div>
       </div>
     );
   }
 
-  // Calculate pricing
+  if (isLoadingRoom) return <div className="min-h-screen bg-linen flex items-center justify-center p-6"><div className="text-forest uppercase tracking-widest text-sm animate-pulse">Loading Checkout...</div></div>;
+  if (!room) return <div className="min-h-screen bg-linen flex items-center justify-center p-6"><div className="text-forest">Room not found</div></div>;
+
   const start = new Date(checkIn);
   const end = new Date(checkOut);
   const nights = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)));
@@ -92,6 +91,9 @@ function CheckoutContent() {
     try {
       const response = await apiFetch<{ booking: { id: string }, url: string | null }>('/public/bookings', {
         method: 'POST',
+        headers: {
+          'Idempotency-Key': idempotencyKey,
+        },
         body: JSON.stringify({
           roomId: room.id,
           checkInDate: checkIn,
